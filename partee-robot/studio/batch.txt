@@ -1,2 +1,2 @@
-# 22 Nov 21:35: Lahinch treeless links (dune grass and cloud shade were drawn as trees)
-lahinch-old:render
+# 22 Nov 21:45: Woodstock pond traced from satellite (open-water part only)
+woodstock:render
