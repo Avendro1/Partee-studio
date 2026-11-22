@@ -1,4 +1,4 @@
-# 22 Nov 19:00: water gate + tree rows (crowns on real canopy, sprite /1.0), lighter links gorse, no next-door courses
+# 22 Nov 19:40: one island per course (bridge along the walk green->next tee), Ballybunion holes 8+14 retraced (OSM had Cashen holes)
 abbey-par-3:render
 ardglass:render
 balla-par3:render

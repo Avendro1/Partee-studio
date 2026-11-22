@@ -314,6 +314,11 @@ if 'own' in d:
         _cz = unary_union([Point(a).buffer(260) for a in _an])
         _ex = [p.buffer(15) for k in ('building', 'parking') for p in polys.get(k, []) if p.intersects(_cz) and p.area < 6000 and (p.distance(_hl) < 90 or (k == 'building' and p.area > 600 and p.distance(_hl) < 220))]
         if _ex: core = unary_union([core] + _ex).buffer(45).buffer(-45)
+        # one course = one island: where the walk from a green to the next tee crosses a gap, bridge it along that walk
+        if getattr(core, 'geoms', None) and len(core.geoms) > 1:
+            _br = [LineString([LINES[i][-1], LINES[i + 1][0]]) for i in range(len(LINES) - 1)]
+            _br = [b.buffer(28) for b in _br if 0 < b.length < 450 and not core.contains(b)]
+            if _br: core = unary_union([core] + _br).buffer(40).buffer(-40)
 else:
     core = unary_union([LineString(line).buffer(85)] + [p.buffer(14) for k in ('green', 'fairway', 'tee', 'building', 'heath', 'parking') for p in polys.get(k, [])] + [p.buffer(8) for p in polys.get('water', []) if p.area > 2000] + [p.buffer(10) for p in polys.get('path', []) if p.area > 1500])
 core = unary_union([Polygon(g.exterior) for g in getattr(core, 'geoms', [core]) if g.geom_type == 'Polygon'])   # no holes inside the course
