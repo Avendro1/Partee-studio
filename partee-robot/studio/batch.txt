@@ -1,35 +1,4 @@
-# 22 Nov rerun: retrace links/cloudy courses, redraw the rest with lifted look + fixes
-ardglass
-ballybunion
-baltray
-bushfoot
-carne
-castlerock
-county-sligo
-enniscrone
-european
-galfch-rsa-oile-n-na-cruite
-greencastle
-island
-lahinch-old
-portmarnock-2
-portmarnock
-portstewart-strand
-rosapenna
-rosslare
-royal-county-down-annesley
-royal-county-down-championship
-royal-dublin
-royal-portrush-dunluce
-royal-portrush-valley
-st-annes
-strandhill
-tralee
-waterville
-old-head
-dundrum-house
-heritage
-mountbellew
+# 22 Nov rerun 2: redraw only (render step fixed)
 abbey-par-3:render
 balla-par3:render
 ballinamore:render

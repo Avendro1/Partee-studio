@@ -16,7 +16,7 @@ $PY seg.py $K | tail -1
 fi
 echo "traced in $(( $(date +%s)-T0 )) s"
 cd $R/partee-robot/studio
-$PY qa_sat.py $K | tail -25
+if [ "$MODE" != render ]; then $PY qa_sat.py $K | tail -25; fi   # render-only reruns have no fresh trace to QA (last QA report stays)
 cd $S
 python3 course_input.py $R/partee-site/courses/$K.json $K/all.json
 N=$(python3 -c "import json;print(' '.join(str(h['ref']) for h in json.load(open('$R/partee-site/courses/$K.json'))['holes'] if len(h['pts'])>1))")
