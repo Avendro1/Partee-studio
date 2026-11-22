@@ -10,7 +10,13 @@ u = f'https://api.openstreetmap.org/api/0.6/map?bbox={bb[0]:.5f},{bb[1]:.5f},{bb
 x = urllib.request.urlopen(urllib.request.Request(u, headers={'User-Agent': 'partee-course-builder/1.0'}), timeout=120).read()
 root = ET.fromstring(x); N = {n.get('id'): (float(n.get('lon')), float(n.get('lat'))) for n in root.iter('node')}
 loc = lambda p: ((p[0] - d['lon']) * 111320 * c, (p[1] - d['lat']) * 110574)
-new = []
+new = []; coast = set()
+for e in list(root.iter('way')) + list(root.iter('relation')):   # links test: dunes/beach/coastline next to the course
+    t = {q.get('k'): q.get('v') for q in e.iter('tag')}
+    if t.get('natural') in ('coastline', 'beach', 'dune'): coast.add(t['natural'])
+    if t.get('golf:course') == 'links' or t.get('golf_course') == 'links': coast.add('links')
+sandy = any(f[0] == 'sand' for f in d['feats'])
+links = bool(coast & {'dune', 'links'}) or (bool(coast & {'coastline', 'beach'}) and sandy)
 for w in root.iter('way'):
     tags = {t.get('k'): t.get('v') for t in w.iter('tag')}
     hw = tags.get('highway'); RW = {'motorway': 9, 'trunk': 8, 'primary': 7.5, 'secondary': 7, 'tertiary': 6.5, 'unclassified': 5.5, 'residential': 5.5, 'service': 4, 'living_street': 5}
@@ -31,6 +37,8 @@ for w in root.iter('way'):
 def add(path):
     if not os.path.exists(path): return 0
     j = json.load(open(path))
+    j['coastal_links'] = links
     j['feats'] = [f for f in j['feats'] if f[0] not in ('building', 'parking', 'road')] + [[k, b] for k, b in new]
     s = json.dumps(j); open(path, 'w').write(s); return len(new)
+print('coast', sorted(coast), 'links', links)
 print('buildings', add(CJ), add(f'/tmp/claude-0/osm/teacher/{key}.json'))
