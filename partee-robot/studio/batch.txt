@@ -1,2 +1,2 @@
-# 22 Nov 21:25: Old Head treeless headland: photo crowns (gorse, rocks, cliff) and OSM wood dropped
-old-head:render
+# 22 Nov 21:35: Lahinch treeless links (dune grass and cloud shade were drawn as trees)
+lahinch-old:render
