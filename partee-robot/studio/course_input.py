@@ -14,6 +14,7 @@ for h in d['holes']:
 crowns = [c[:3] + ['gorse' if d.get('links') else 'round'] for c in d.get('crowns', [])]
 out = dict(key=d['key'], name=d['name'], place=d.get('place', ''), holes=d['holes'], feats=feats, crowns=crowns, pins=pins, own=own)
 if d.get('elev'): out['elev'] = d['elev']
+out['links'] = bool(d.get('links'))
 from shapely.ops import unary_union as _uu
 _z = _uu([LineString(hh['pts']).buffer(110) for hh in d['holes'] if len(hh['pts']) > 1]).bounds
 out['sat'] = {'path': f"/tmp/claude-0/osm/sat/{d['key']}-0.3.png", 'x0': _z[0], 'y1': _z[3], 'mpp': .3}

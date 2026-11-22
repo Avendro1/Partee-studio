@@ -115,6 +115,9 @@ fair_m = mask(polys.get('fairway', [])); green_m = mask(polys.get('green', []));
 play = np.clip(fair_m + green_m + tee_m, 0, 1)
 dplay = ndi.distance_transform_edt(play < .5) / PPM
 img[:] = C['rough']; fill(np.clip((dplay - 6) / 25, 0, 1), C['rough_d'], .8)
+if d.get('links'):   # links: deep rough is tan marram / dune grass, mottled, as in the photo (Shane 22 Nov: must look like the satellite)
+    dn = noise(9, 61, 2); dn2 = noise(2.5, 62, 1); dune = np.clip((dplay - 5) / 14, 0, 1) * np.clip(.75 + .35 * dn, 0, 1)
+    fill(dune, hexc('#9C9358'), .85); fill(dune * np.clip(-dn2, 0, 1), hexc('#7E7445'), .6); fill(dune * np.clip(dn2 - .3, 0, 1), hexc('#B3A873'), .5)
 n1, n2, n3 = noise(6, 1), noise(1.2, 2, 2), noise(.25, 3, 1)
 mul(np.ones((H, W)), 1); g_ = np.random.default_rng(33).standard_normal((H, W)).astype(np.float32)
 grain = ndi.gaussian_filter(g_, (max(.6, .35 * PPM), max(.4, .06 * PPM))); grain /= grain.std() + 1e-6

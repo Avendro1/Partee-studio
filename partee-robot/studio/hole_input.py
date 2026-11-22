@@ -54,6 +54,7 @@ feats = [[k, rc(c)] for k, c in feats]; own = [rc(c) for c in own]
 crowns = [list(R2(c[0], c[1])) + c[2:] for c in crowns]; h = dict(h, pts=[list(R2(*p)) for p in h['pts']]); pin = Point(*R2(pin.x, pin.y))
 out = dict(rot=rot, own=own, key=d['key'], name=d['name'], place=d.get('place', ''), holes=[h], feats=feats, crowns=crowns, pins=[[pin.x, pin.y]], elev=d.get('elev'))
 if out['elev'] is None: out.pop('elev')
+out['links'] = bool(d.get('links'))
 from shapely.ops import unary_union as _uu
 _z = _uu([LineString(hh['pts']).buffer(110) for hh in d['holes'] if len(hh['pts']) > 1]).bounds
 out['sat'] = {'path': f"/tmp/claude-0/osm/sat/{d['key']}-0.3.png", 'x0': _z[0], 'y1': _z[3], 'mpp': .3}
