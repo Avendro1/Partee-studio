@@ -173,7 +173,13 @@ for q in shapes(clean((cls == 7) & ~_known & inz, .8), 120, .5):
     P_ = Polygon(q).buffer(0); rr = P_.minimum_rotated_rectangle
     if P_.area / max(1, rr.area) > .6 and 4 * math.pi * P_.area / P_.length ** 2 > .35: NF.setdefault('building', []).append(np.array(rr.exterior.coords)[:-1])
 _bl = [Polygon(q).buffer(12) for q in NF.get('building', [])]
-NF['bunker'] = [q for q in NF['bunker'] if not any(b.intersects(Polygon(q)) for b in _bl)]   # no 'bunkers' in yards next to houses   # land inside lakes (drawn over the water)
+NF['bunker'] = [q for q in NF['bunker'] if not any(b.intersects(Polygon(q)) for b in _bl)]
+# sanity: a pale winter/clifftop photo can turn whole rough areas into 'sand'. A new bunker no map knows about must be bunker-sized
+_mb = [Polygon(q).buffer(2) for q in F.get('bunker', [])]
+NF['bunker'] = [q for q in NF['bunker'] if Polygon(q).buffer(0).area < 400 or any(m.intersects(Polygon(q).buffer(0)) for m in _mb)]
+_ma = sum(Polygon(q).buffer(0).area for q in F.get('bunker', [])); _na = sum(Polygon(q).buffer(0).area for q in NF['bunker'])
+if len(F.get('bunker', [])) >= 20 and _na > 3 * _ma:   # photo found 3x more sand than the mapped bunkers: trust the map
+    NF['bunker'] = [q for q in NF['bunker'] if any(m.intersects(Polygon(q).buffer(0)) for m in _mb)]; print('bunker sanity: kept mapped bunkers only', flush=True)   # no 'bunkers' in yards next to houses   # land inside lakes (drawn over the water)
 print({k: len(v) for k, v in NF.items()}, flush=True)
 # crowns from the tree class
 f = 2; small = cv2.resize(trees, (W // f, H // f), interpolation=cv2.INTER_NEAREST); rem = small.copy()

@@ -16,8 +16,9 @@ for e in list(root.iter('way')) + list(root.iter('relation')):   # links test: d
     if t.get('natural') in ('coastline', 'beach', 'dune'): coast.add(t['natural'])
     if t.get('golf:course') == 'links' or t.get('golf_course') == 'links': coast.add('links')
 sandy = any(f[0] == 'sand' for f in d['feats'])
+FORCE_LINKS = {'old-head'}   # clifftop gorse course, no dunes in OSM
 PARKLAND = {'courtown', 'deer-park', 'tara-glen', 'galway', 'woodbrook', 'st-helen-s-bay'}   # coastal but tree-lined parkland: checked by eye 22 Nov
-links = key not in PARKLAND and bool(coast & {'dune', 'links'}) or (key not in PARKLAND and bool(coast & {'coastline', 'beach'}) and sandy)
+links = key in FORCE_LINKS or key not in PARKLAND and bool(coast & {'dune', 'links'}) or (key not in PARKLAND and bool(coast & {'coastline', 'beach'}) and sandy)
 for w in root.iter('way'):
     tags = {t.get('k'): t.get('v') for t in w.iter('tag')}
     hw = tags.get('highway'); RW = {'motorway': 9, 'trunk': 8, 'primary': 7.5, 'secondary': 7, 'tertiary': 6.5, 'unclassified': 5.5, 'residential': 5.5, 'service': 4, 'living_street': 5}
