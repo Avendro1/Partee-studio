@@ -1,0 +1,254 @@
+{
+"feats": [],
+"holes": [],
+"drop": [
+{
+"kind": "bunker",
+"ll": [
+-7.1911257,
+52.5215137
+],
+"why": "L in 116 ring 110 bright 0.31"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1910101,
+52.52161
+],
+"why": "L in 106 ring 101 bright 0.07"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1912016,
+52.5216525
+],
+"why": "L in 104 ring 135 bright 0.01"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1922968,
+52.5210854
+],
+"why": "L in 106 ring 107 bright 0.34"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1919894,
+52.5209114
+],
+"why": "L in 131 ring 136 bright 0.30"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.185623,
+52.5207504
+],
+"why": "L in 108 ring 99 bright 0.29"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1827542,
+52.5241947
+],
+"why": "L in 106 ring 132 bright 0.11"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1884684,
+52.5250357
+],
+"why": "L in 97 ring 108 bright 0.04"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1859894,
+52.5208019
+],
+"why": "L in 102 ring 105 bright 0.21"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1831082,
+52.523799
+],
+"why": "L in 111 ring 98 bright 0.26"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1810039,
+52.523194
+],
+"why": "L in 104 ring 111 bright 0.22"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.180442,
+52.5235892
+],
+"why": "L in 125 ring 109 bright 0.12"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1786413,
+52.5215657
+],
+"why": "L in 112 ring 112 bright 0.05"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1804348,
+52.5229923
+],
+"why": "L in 125 ring 165 bright 0.00"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1807023,
+52.5237606
+],
+"why": "L in 109 ring 114 bright 0.05"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1800897,
+52.5230054
+],
+"why": "L in 110 ring 111 bright 0.16"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1801717,
+52.5228675
+],
+"why": "L in 109 ring 106 bright 0.15"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1934751,
+52.5247893
+],
+"why": "L in 98 ring 104 bright 0.13"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1929546,
+52.5287554
+],
+"why": "L in 104 ring 105 bright 0.01"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1949538,
+52.5269281
+],
+"why": "L in 105 ring 101 bright 0.20"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.192622,
+52.5284466
+],
+"why": "L in 121 ring 123 bright 0.06"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1924521,
+52.5284276
+],
+"why": "L in 38 ring 78 bright 0.00"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1924778,
+52.528556
+],
+"why": "L in 89 ring 99 bright 0.09"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1934243,
+52.5246428
+],
+"why": "L in 102 ring 101 bright 0.24"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1927601,
+52.5284104
+],
+"why": "L in 112 ring 109 bright 0.01"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1925904,
+52.5286677
+],
+"why": "L in 117 ring 128 bright 0.27"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1926519,
+52.528334
+],
+"why": "L in 96 ring 96 bright 0.00"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.197771,
+52.5329702
+],
+"why": "L in 89 ring 99 bright 0.03"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1985867,
+52.5330272
+],
+"why": "L in 98 ring 106 bright 0.00"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.1941722,
+52.5298985
+],
+"why": "L in 97 ring 106 bright 0.12"
+},
+{
+"kind": "bunker",
+"ll": [
+-7.184756,
+52.5182534
+],
+"why": "L in 45 ring 44 bright 0.23"
+}
+]
+}

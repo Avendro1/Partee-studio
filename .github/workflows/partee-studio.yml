@@ -1,0 +1,87 @@
+# Partee studio batch: traces courses from the satellite photo, QA-checks them and renders previews.
+# Start it by editing partee-robot/studio/batch.txt (one course key per line) and pushing.
+name: partee-studio
+on:
+  push:
+    paths: ['partee-robot/studio/batch.txt']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.s.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: s
+        run: |
+          python3 - <<'P' >> $GITHUB_OUTPUT
+          import json
+          keys = [k.strip() for k in open('partee-robot/studio/batch.txt') if k.strip() and not k.startswith('#')]
+          n = min(256, max(1, len(keys)))
+          print('shards=' + json.dumps([' '.join(keys[i::n]) for i in range(n)]))
+          P
+  run:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        keys: ${{ fromJson(needs.plan.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - uses: actions/cache@v4
+        with: { path: ~/sam, key: sam-vit-b }
+      - name: Install
+        run: |
+          pip install -q numpy scipy shapely pillow opencv-python-headless scikit-learn scikit-image
+          pip install -q torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install -q git+https://github.com/facebookresearch/segment-anything.git
+          mkdir -p ~/sam; [ -f ~/sam/sam_vit_b.pth ] || curl -sL -o ~/sam/sam_vit_b.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
+      - name: Same paths as the studio machine
+        run: |
+          sudo mkdir -p /home/user /tmp/claude-0/osm/{sat,teacher,fw,qa,stamp}; sudo chmod -R 777 /tmp/claude-0 /home/user
+          ln -s $GITHUB_WORKSPACE /home/user/avendro-web-v2
+          ln -s ~/sam/sam_vit_b.pth /tmp/claude-0/sam_vit_b.pth
+          mkdir -p /tmp/claude-0/samenv/bin; ln -s $(which python3) /tmp/claude-0/samenv/bin/python
+          cp partee-robot/studio/{stamper,trees2d,hole_input,course_input}.py /tmp/claude-0/osm/stamp/
+      - name: Trace, QA, render
+        run: |
+          for K in ${{ matrix.keys }}; do
+            bash partee-robot/studio/run_course.sh $K > /tmp/claude-0/osm/$K.log 2>&1 || echo "FAILED $K" >> /tmp/claude-0/osm/failed.txt
+            tail -30 /tmp/claude-0/osm/$K.log
+          done
+      - name: Collect
+        if: always()
+        run: |
+          mkdir -p out/courses out/qa out/previews
+          for K in ${{ matrix.keys }}; do
+            cp partee-site/courses/$K.json out/courses/ 2>/dev/null || true
+            cp /tmp/claude-0/osm/qa/$K.json out/qa/ 2>/dev/null || true
+            mkdir -p out/previews/$K; cp /tmp/claude-0/osm/stamp/$K/*.jpg out/previews/$K/ 2>/dev/null || true
+            cp /tmp/claude-0/osm/$K.log out/qa/$K.log 2>/dev/null || true
+          done
+          cp /tmp/claude-0/osm/failed.txt out/qa/failed-${{ strategy.job-index }}.txt 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: 'shard-${{ strategy.job-index }}', path: out, retention-days: 30 }
+  save:
+    needs: run
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: shards }
+      - name: Commit traced courses + QA reports (previews stay as a download)
+        run: |
+          mkdir -p partee-robot/studio/qa
+          for s in shards/*; do cp $s/courses/*.json partee-site/courses/ 2>/dev/null || true; cp $s/qa/*.json $s/qa/*.txt partee-robot/studio/qa/ 2>/dev/null || true; done
+          git config user.name "partee-studio-bot"; git config user.email "partee-studio-bot@users.noreply.github.com"
+          git add partee-site/courses partee-robot/studio/qa
+          git commit -m "Studio batch: traced courses + QA reports" || exit 0
+          for i in 1 2 3 4; do git pull --rebase -q && git push && break; sleep $((i*10)); done
