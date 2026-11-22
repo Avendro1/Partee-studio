@@ -8,7 +8,7 @@ for k, c in d['feats']:
     if k == 'rough': continue
     try: p = Polygon(list(zip(c[0::2], c[1::2]))).buffer(0)
     except Exception: continue
-    if p.is_empty or not p.intersects(zone): continue
+    if p.is_empty or not p.intersects(zone) or (k == 'bunker' and p.area > 3000): continue
     q = p.intersection(zone)
     for g in getattr(q, 'geoms', [q]):
         if g.geom_type == 'Polygon' and g.area > .5: feats.append([k, [round(v, 2) for xy in list(g.exterior.coords)[:-1] for v in xy]])

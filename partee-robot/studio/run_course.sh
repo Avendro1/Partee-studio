@@ -1,15 +1,19 @@
 #!/bin/bash
 # full studio pipeline for one course
-set -eo pipefail; K=$1; R=/home/user/avendro-web-v2; S=/tmp/claude-0/osm/stamp; PY=/tmp/claude-0/samenv/bin/python
+set -eo pipefail; K=${1%%:*}; MODE=${1#*:}; R=/home/user/avendro-web-v2; S=/tmp/claude-0/osm/stamp; PY=/tmp/claude-0/samenv/bin/python
 mkdir -p /tmp/claude-0/osm/teacher /tmp/claude-0/osm/qa $S/$K
 cp $R/partee-site/courses/$K.json /tmp/claude-0/osm/$K.before-studio.json
 T0=$(date +%s)
 cd $R/partee-robot/tools
+if [ "$MODE" = render ]; then   # KEY:render = already traced, just redraw the prints with the current studio code
+PHOTO_ONLY=1 $PY photo_fix.py $K | tail -1
+else
 python3 verify.py $K --apply | tail -2
 python3 osm_buildings.py $K | tail -1
 $PY photo_fix.py $K | tail -2
 cp $R/partee-site/courses/$K.json /tmp/claude-0/osm/teacher/$K.json
 $PY seg.py $K | tail -1
+fi
 echo "traced in $(( $(date +%s)-T0 )) s"
 cd $R/partee-robot/studio
 $PY qa_sat.py $K | tail -25

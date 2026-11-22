@@ -1,7 +1,8 @@
 # course_input.py COURSE.json OUT.json : whole course for the stamper (north up, every hole's own features)
 import json, sys
 from shapely.geometry import LineString, Polygon, Point
-d = json.load(open(sys.argv[1])); feats = [[k, c] for k, c in d['feats'] if k != 'rough']
+d = json.load(open(sys.argv[1])); _A = lambda c: Polygon(list(zip(c[0::2], c[1::2]))).buffer(0).area
+feats = [[k, c] for k, c in d['feats'] if k != 'rough' and not (k == 'bunker' and _A(c) > 3000)]   # no real bunker is a field-sized patch
 own = [c for k, c in feats if k in ('fairway', 'green', 'tee')]
 greens = [Polygon(list(zip(c[0::2], c[1::2]))) for k, c in feats if k == 'green']
 pins = []

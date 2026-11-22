@@ -49,6 +49,7 @@ else:   # fetch the photo tiles in parallel, then cache them for seg.py / qa_sat
     with ThreadPoolExecutor(8) as ex: list(ex.map(_get, [(tx, ty) for ty in range(0, H, T) for tx in range(0, W, T)]))
     cv2.imwrite(cache, im)
 print('photo', W, H, flush=True)
+if os.environ.get('PHOTO_ONLY'): sys.exit(0)   # render-only reruns just need the cached photo
 px = lambda q: np.stack([(np.asarray(q)[:, 0] - x0) / MPP, (y1 - np.asarray(q)[:, 1]) / MPP], 1)
 met = lambda p: np.stack([x0 + p[:, 0] * MPP, y1 - p[:, 1] * MPP], 1)
 def rast(polys, dil=0):

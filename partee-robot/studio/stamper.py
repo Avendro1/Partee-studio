@@ -306,7 +306,10 @@ if 'own' in d:
     core = unary_union([LineString(smooth_line(l_, 6)).buffer(62 if len(LINES) == 1 else 30) for l_ in LINES] + [P(['x', c]).buffer(30) for c in d['own']]).buffer(30).buffer(-30)
     if len(LINES) > 1:   # whole course: pull in the clubhouse, car parks and buildings next to the holes
         _hl = unary_union([LineString(l_) for l_ in LINES])
-        _ex = [p.buffer(15) for k in ('building', 'parking') for p in polys.get(k, []) if p.distance(_hl) < 90 or (k == 'building' and p.area > 600 and p.distance(_hl) < 220)]
+        # only around the clubhouse (1st tee, 9th/18th green, 10th tee): housing estates and factories beside the fairways stay off the print
+        _an = [LINES[0][0], LINES[-1][-1]] + ([LINES[9][0], LINES[8][-1]] if len(LINES) >= 10 else [])
+        _cz = unary_union([Point(a).buffer(260) for a in _an])
+        _ex = [p.buffer(15) for k in ('building', 'parking') for p in polys.get(k, []) if p.intersects(_cz) and p.area < 6000 and (p.distance(_hl) < 90 or (k == 'building' and p.area > 600 and p.distance(_hl) < 220))]
         if _ex: core = unary_union([core] + _ex).buffer(45).buffer(-45)
 else:
     core = unary_union([LineString(line).buffer(85)] + [p.buffer(14) for k in ('green', 'fairway', 'tee', 'building', 'heath', 'parking') for p in polys.get(k, [])] + [p.buffer(8) for p in polys.get('water', []) if p.area > 2000] + [p.buffer(10) for p in polys.get('path', []) if p.area > 1500])
