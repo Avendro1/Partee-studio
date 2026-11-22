@@ -1,4 +1,2 @@
-# 22 Nov 21:00: Old Head big fake bunkers -> real sand pockets; Wexford 17 + Moyola 3 fairways traced from satellite
+# 22 Nov 21:25: Old Head treeless headland: photo crowns (gorse, rocks, cliff) and OSM wood dropped
 old-head:render
-wexford:render
-moyola-park:render
