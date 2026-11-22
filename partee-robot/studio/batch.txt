@@ -1,2 +1,4 @@
-# 22 Nov 21:45: Woodstock pond traced from satellite (open-water part only)
-woodstock:render
+# 22 Nov 22:00: 5 missing fairways traced from satellite (tree-bounded only)
+carton-house-montgomerie:render
+deerpark:render
+raffeen-creek:render
