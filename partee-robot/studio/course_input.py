@@ -1,7 +1,7 @@
 # course_input.py COURSE.json OUT.json : whole course for the stamper (north up, every hole's own features)
 import json, sys
 from shapely.geometry import LineString, Polygon, Point
-d = json.load(open(sys.argv[1])); d['feats'] = __import__('water_gate').gate_course(d); _fat = lambda c: (lambda q: 2 * q.area / max(q.length, 1) > 12)(Polygon(list(zip(c[0::2], c[1::2]))).buffer(0))   # loop road filled in as a slab
+d = json.load(open(sys.argv[1])); d['feats'] = __import__('water_gate').gate_course(d); d['crowns'] = __import__('water_gate').crown_gate(d); _fat = lambda c: (lambda q: 2 * q.area / max(q.length, 1) > 12)(Polygon(list(zip(c[0::2], c[1::2]))).buffer(0))   # loop road filled in as a slab
 _A = lambda c: Polygon(list(zip(c[0::2], c[1::2]))).buffer(0).area
 feats = [[k, c] for k, c in d['feats'] if k != 'rough' and not (k == 'bunker' and _A(c) > 3000) and not (k == 'road' and _fat(c))]   # no real bunker is a field-sized patch
 _hl = __import__('shapely.ops', fromlist=['unary_union']).unary_union([LineString(h['pts']) for h in d['holes'] if len(h['pts']) > 1])

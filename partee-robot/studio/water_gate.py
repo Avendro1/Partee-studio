@@ -32,3 +32,25 @@ def gate_course(d):
     try: json.dump(rep, open(f"/tmp/claude-0/osm/sat/{d['key']}-water.json", 'w'))
     except OSError: pass
     return f
+def crown_gate(d):
+    """Shane 22 Nov: tree rows were drawn as solid woodland. Keep a traced crown only if the photo under it is
+    canopy (mostly darker than the fairways AND textured); crowns on lit grass between trees or on smooth shadow go."""
+    import json
+    from shapely.geometry import LineString; from shapely.ops import unary_union
+    z = unary_union([LineString(h['pts']).buffer(110) for h in d['holes'] if len(h['pts']) > 1]).bounds
+    p = f"/tmp/claude-0/osm/sat/{d['key']}-0.3.png"
+    if not os.path.exists(p) or not d.get('crowns'): return d.get('crowns', [])
+    im = cv2.imread(p); x0, y1, mpp = z[0], z[3], .3
+    g = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY).astype(np.float32); mu = cv2.blur(g, (5, 5)); sd = np.sqrt(np.maximum(cv2.blur(g * g, (5, 5)) - mu * mu, 0))
+    L = cv2.cvtColor(im, cv2.COLOR_BGR2LAB)[..., 0].astype(np.float32) * 100 / 255
+    tf = np.zeros(g.shape, np.uint8)
+    for k, c in d['feats']:
+        if k == 'fairway': q = np.array(c).reshape(-1, 2); cv2.fillPoly(tf, [np.stack([(q[:, 0] - x0) / mpp, (y1 - q[:, 1]) / mpp], 1).astype(np.int32)], 1)
+    gL = np.median(L[tf > 0]) if tf.any() else np.median(L); out = []
+    for c in d['crowns']:
+        X = (c[0] - x0) / mpp; Y = (y1 - c[1]) / mpp; r = max(2, c[2] * .7 / mpp)
+        a, b, e, f = int(max(0, Y - r)), int(min(g.shape[0], Y + r + 1)), int(max(0, X - r)), int(min(g.shape[1], X + r + 1))
+        if b <= a or f <= e: continue
+        yy, xx = np.mgrid[a:b, e:f]; m = (yy - Y) ** 2 + (xx - X) ** 2 <= r * r
+        if (L[a:b, e:f][m] < gL - 8).mean() >= .5 and np.median(sd[a:b, e:f][m]) >= 3.5: out.append(c)
+    return out

@@ -1,4 +1,4 @@
-# 22 Nov 18:40: water only where the satellite shows open water (by-eye checked), lighter links gorse, no next-door courses
+# 22 Nov 19:00: water gate + tree rows (crowns only on real canopy, true-size trees), lighter links gorse, no next-door courses
 abbey-par-3:render
 ardglass:render
 balla-par3:render

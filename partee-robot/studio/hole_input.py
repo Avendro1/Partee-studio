@@ -2,7 +2,7 @@
 import json, sys
 from shapely.geometry import LineString, Polygon, Point
 d = json.load(open(sys.argv[1])); ref = sys.argv[2]
-from water_gate import gate_course; d['feats'] = gate_course(d)   # water only where the photo clearly shows open water
+from water_gate import gate_course, crown_gate; d['feats'] = gate_course(d); d['crowns'] = crown_gate(d)   # water only where the photo clearly shows open water
 h = [h for h in d['holes'] if str(h['ref']) == ref][0]; L = LineString(h['pts']); zone = L.buffer(140)
 feats = []
 for k, c in d['feats']:
