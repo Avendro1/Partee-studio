@@ -145,13 +145,14 @@ for q in F.get('water', []):
         if Pn.geom_type == 'Polygon': W2.append(np.array(Pn.exterior.coords)[:-1]); continue
     W2.append(q)
 # ---------- trees: canopy from the photo, then individual crowns
-open_ = rast(F.get('fairway', []) + F.get('green', []) + F.get('tee', []), -1.0) | rast(B2 + W2 + F.get('building', []), 1.0)
+open_ = rast(F.get('fairway', []) + F.get('green', []) + F.get('tee', []), -1.0) | rast(B2 + W2 + F.get('building', []) + F.get('path', []) + F.get('road', []) + F.get('parking', []), 1.0)
 vref = np.percentile(V[inz], 50); sref = np.percentile(sd[inz], 50)
 can = ((V < vref * 1.08) & (sd > max(7, sref * 1.5)) & (hsv[..., 0] > 25) & (hsv[..., 0] < 100)) | ((V < vref * .6) & (sd > 6))
 # winter photos: bare deciduous canopy is brown/mauve (redder than grass), and dense woods read darker than turf
 grassA = np.median(A[turf]) if turf.any() else np.median(A[inz])
 LINKS = grassA > -7   # links turf is straw-yellow; its brown patches are heather/dune grass, not bare trees
-bare = (((A > grassA + 9) & (not LINKS) & (L < grassL + 25) & (L > grassL * .45)) | ((L < grassL - 18) & (L > grassL * .3) & (not LINKS))).astype(np.uint8)
+tex = cv2.blur(sd, (15, 15)) > sref * 1.3   # canopy is textured; rough, heather and dune grass are smooth at this scale
+bare = ((((A > grassA + 9) & (L < grassL + 25) & (L > grassL * .45)) | ((L < grassL - 18) & (L > grassL * .3))) & tex & (not LINKS)).astype(np.uint8)
 bare = cv2.morphologyEx(bare, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (9, 9)))
 bare = cv2.morphologyEx(bare, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (11, 11)))
 can = (can | (bare > 0)).astype(np.uint8)
