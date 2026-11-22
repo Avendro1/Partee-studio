@@ -345,6 +345,12 @@ outimg = C['paper'][None, None] * paper_ * (1 - isl[..., None]) + img * isl[...,
 outimg *= (1 + isl[..., None] * (.006 * noise(.12, 41, 1))[..., None])
 outimg = outimg[max(0, ys.min() - M_):ys.max() + M_, max(0, xs.min() - M_):xs.max() + M_]
 Image.fromarray((np.clip(outimg, 0, 1) * 255).astype(np.uint8)).save(out, quality=92)
+_cr = (slice(max(0, ys.min() - M_), ys.max() + M_), slice(max(0, xs.min() - M_), xs.max() + M_))
+if os.environ.get('ALPHA') == '1':   # marketing: island on transparent background + edge-to-edge version, same pixel frame
+    rgba = np.dstack([np.clip(img[_cr], 0, 1), np.clip(isl[_cr], 0, 1)])
+    Image.fromarray((rgba * 255).astype(np.uint8), 'RGBA').save(out.rsplit('.', 1)[0] + '-island.png')
+    Image.fromarray((np.clip(img[_cr], 0, 1) * 255).astype(np.uint8)).save(out.rsplit('.', 1)[0] + '-fullbleed.png')
+    json.dump({'x0': int(_cr[1].start), 'y0': int(_cr[0].start), 'pins_px': [list(px(*p_)) for p_ in d.get('pins', [])], 'tee_px': [list(px(*h_['pts'][0])) for h_ in d['holes']]}, open(out.rsplit('.', 1)[0] + '-frame.json', 'w'))
 if os.environ.get('SAT') == '1' and 'sat' in d:   # the satellite photo in exactly the same frame, for the swipe check
     import cv2
     sa = d['sat']; sim = cv2.imread(sa['path']); ro = -d.get('rot', 0)
