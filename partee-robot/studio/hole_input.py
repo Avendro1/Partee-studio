@@ -17,11 +17,35 @@ end = Point(h['pts'][-1]); greens = [Polygon(list(zip(c[0::2], c[1::2]))) for k,
 pin = min(greens, key=lambda g: g.distance(end)).centroid if greens else end
 import math
 others = [LineString(o['pts']) for o in d['holes'] if o is not h and len(o['pts']) > 1]
-own = []
+own = []; drop = set()
+LB = L.buffer(30); OB = [o.buffer(30) for o in others]
+from shapely.ops import unary_union as _U
+from shapely.geometry import box as _box
+def _cell(p):   # split a fairway that several holes share: keep only the part nearer this hole's line than any other
+    near = [o for o in others if o.distance(p) < 80]
+    if not near: return p
+    x0_, y0_, x1_, y1_ = p.bounds; st = 4; keep = []
+    for gx in np.arange(x0_, x1_, st):
+        for gy in np.arange(y0_, y1_, st):
+            c_ = Point(gx + st / 2, gy + st / 2)
+            if L.distance(c_) <= min(o.distance(c_) for o in near): keep.append(_box(gx, gy, gx + st, gy + st))
+    return p.intersection(_U(keep).buffer(2).buffer(-2)) if keep else Polygon()
+import numpy as np
+_nf = []
 for k, c in feats:
+    if k == 'fairway':
+        q = _cell(Polygon(list(zip(c[0::2], c[1::2]))).buffer(0)).buffer(1.5).buffer(-1.5)
+        for g in getattr(q, 'geoms', [q]):
+            if g.geom_type == 'Polygon' and g.area > 20: _nf.append([k, [round(v, 2) for xy in list(g.simplify(.3).exterior.coords)[:-1] for v in xy]])
+    else: _nf.append([k, c])
+feats = _nf
+for i, (k, c) in enumerate(feats):
     if k in ('fairway', 'green', 'tee'):
-        p = Polygon(list(zip(c[0::2], c[1::2])))
-        if p.distance(L) <= min([p.distance(o) for o in others] + [1e9]) + 2: own.append(c)
+        p = Polygon(list(zip(c[0::2], c[1::2]))).buffer(0)
+        mine = p.intersection(LB).area; theirs = max([p.intersection(b).area for b in OB] + [0])
+        if mine > 0 and mine >= theirs * .8 or (mine == 0 and theirs == 0 and p.distance(L) <= min([p.distance(o) for o in others] + [1e9]) + 2): own.append(c)
+        else: drop.add(i)   # another hole's fairway/green/tee: leave it as plain rough so only this hole reads on the print
+feats = [f for i, f in enumerate(feats) if i not in drop]
 (ax, ay), (bx, by) = h['pts'][0], h['pts'][-1]; rot = math.pi / 2 - math.atan2(by - ay, bx - ax)   # tee bottom, green top
 cr_, sr_ = math.cos(rot), math.sin(rot)
 R2 = lambda x, y: (round(x * cr_ - y * sr_, 2), round(x * sr_ + y * cr_, 2))
