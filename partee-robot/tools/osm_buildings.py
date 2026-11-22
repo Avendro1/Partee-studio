@@ -25,8 +25,10 @@ for w in root.iter('way'):
         pts = [loc(N[n.get('ref')]) for n in w.iter('nd') if n.get('ref') in N]
         if len(pts) >= 2:
             from shapely.geometry import LineString
-            P = LineString(pts).buffer(RW[hw] / 2, cap_style=2, join_style=2)
-            new.append(('road', [round(v, 1) for q in list(P.exterior.coords)[:-1] for v in q]))
+            m = len(pts) // 2   # split every way in two so a loop road (car park ring, drive) never fills in as one solid slab
+            for part in ([pts[:m + 1], pts[m:]] if len(pts) > 3 else [pts]):
+                P = LineString(part).buffer(RW[hw] / 2, cap_style=2, join_style=2)
+                if P.geom_type == 'Polygon' and not P.interiors: new.append(('road', [round(v, 1) for q in list(P.exterior.coords)[:-1] for v in q]))
         continue
     kind = 'building' if 'building' in tags else 'parking' if tags.get('amenity') == 'parking' and w.find('nd') is not None else None
     if not kind: continue
