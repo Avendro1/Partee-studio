@@ -330,15 +330,23 @@ lab, nl = ndi.label(isl > .3); keep = np.zeros(nl + 1, bool)
 for i_, sz in enumerate(ndi.sum(np.ones_like(isl), lab, range(1, nl + 1)), 1): keep[i_] = sz > .08 * (isl > .3).sum()
 isl *= ndi.binary_dilation(keep[lab], iterations=int(PPM * 2))
 mul(np.clip(1 - grass, 0, 1) * (isl > 0) * (1 - treea), .9)
-outimg = C['paper'][None, None] * (1 - isl[..., None]) + img * isl[..., None]
+ys, xs = np.where(isl > .02); S_ = max(ys.max() - ys.min(), xs.max() - xs.min()); M_ = max(60, int(S_ * .055))
+paper_ = np.ones((H, W, 1), np.float32)
+if os.environ.get('LIFT', '1') == '1':   # style A (Shane 22 Nov): the course sits lifted off the paper with a soft shadow + fine paper grain
+    import cv2
+    def _sh(dy, sig, op): return cv2.GaussianBlur(np.roll(isl, int(dy), 0), (0, 0), sig) * op
+    paper_ = ((1 - _sh(S_ * .012, S_ * .018, .30)) * (1 - _sh(S_ * .003, S_ * .004, .25)))[..., None]
+    rg = np.random.default_rng(7); gr = cv2.GaussianBlur(rg.normal(0, 1, (H, W)).astype(np.float32), (0, 0), max(.8, PPM * .35)) * .012
+    paper_ = paper_ * (1 + gr[..., None])
+outimg = C['paper'][None, None] * paper_ * (1 - isl[..., None]) + img * isl[..., None]
 outimg *= (1 + isl[..., None] * (.006 * noise(.12, 41, 1))[..., None])
-ys, xs = np.where(isl > .02); outimg = outimg[max(0, ys.min() - 60):ys.max() + 60, max(0, xs.min() - 60):xs.max() + 60]
+outimg = outimg[max(0, ys.min() - M_):ys.max() + M_, max(0, xs.min() - M_):xs.max() + M_]
 Image.fromarray((np.clip(outimg, 0, 1) * 255).astype(np.uint8)).save(out, quality=92)
 if os.environ.get('SAT') == '1' and 'sat' in d:   # the satellite photo in exactly the same frame, for the swipe check
     import cv2
     sa = d['sat']; sim = cv2.imread(sa['path']); ro = -d.get('rot', 0)
     ex_ = wx * math.cos(ro) - wy * math.sin(ro); ey_ = wx * math.sin(ro) + wy * math.cos(ro)
     sv = cv2.remap(sim, ((ex_ - sa['x0']) / sa['mpp']).astype(np.float32), ((sa['y1'] - ey_) / sa['mpp']).astype(np.float32), cv2.INTER_LINEAR)
-    sv = sv[max(0, ys.min() - 60):ys.max() + 60, max(0, xs.min() - 60):xs.max() + 60]
+    sv = sv[max(0, ys.min() - M_):ys.max() + M_, max(0, xs.min() - M_):xs.max() + M_]
     cv2.imwrite(out.replace('.jpg', '-sat.jpg'), sv, [cv2.IMWRITE_JPEG_QUALITY, 88])
 print('done', out, outimg.shape, f'{time.time() - T0:.1f}s')
