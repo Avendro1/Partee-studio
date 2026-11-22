@@ -52,5 +52,5 @@ def crown_gate(d):
         a, b, e, f = int(max(0, Y - r)), int(min(g.shape[0], Y + r + 1)), int(max(0, X - r)), int(min(g.shape[1], X + r + 1))
         if b <= a or f <= e: continue
         yy, xx = np.mgrid[a:b, e:f]; m = (yy - Y) ** 2 + (xx - X) ** 2 <= r * r
-        if (L[a:b, e:f][m] < gL - 8).mean() >= .5 and np.median(sd[a:b, e:f][m]) >= 3.5: out.append(c)
+        if (L[a:b, e:f][m] < gL - 8).mean() >= .3 and np.median(sd[a:b, e:f][m]) >= 3.5: out.append(c)
     return out

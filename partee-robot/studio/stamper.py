@@ -270,7 +270,7 @@ dens = blur((tm_ > .05).astype(np.float32), 2.5); floor = blur(np.clip((dens - .
 fill(floor, hexc('#3A5226'), .35)
 for i, c in enumerate(cr):
     typ = c[3] if len(c) > 3 else 'round'; spr = LIB[typ][rng.integers(len(LIB[typ]))]
-    R = c[2] * PPM; S = max(4, int(2 * R / 1.2))   # Shane 22 Nov: was /.80, which drew every tree ~45% wider than the photo and merged rows into woods
+    R = c[2] * PPM; S = max(4, int(2 * R / 1.0))   # Shane 22 Nov: was /.80, which drew every tree ~45% wider than the photo and merged rows into woods (1.2 too sparse on single holes)
     im = Image.fromarray((spr * 255).astype(np.uint8)).rotate(0).resize((S, S), Image.LANCZOS)
     a = np.asarray(im, np.float32) / 255; X, Y = px(c[0], c[1]); ox, oy = int(X - S / 2), int(Y - S / 2)
     ys, xs = slice(max(0, oy), min(H, oy + S)), slice(max(0, ox), min(W, ox + S)); a = a[ys.start - oy:ys.stop - oy, xs.start - ox:xs.stop - ox]
