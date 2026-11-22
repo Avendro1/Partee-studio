@@ -23,7 +23,7 @@ else:   # fetch the photo tiles in parallel, then cache them for seg.py / qa_sat
     from concurrent.futures import ThreadPoolExecutor
     im = np.zeros((H, W, 3), np.uint8)
     REL = d.get('sat_release')   # Esri Wayback release id: use an older, cloud-free capture where the current one is cloudy/hazy
-    def _wb(a, b, cc, dd, w, hh, z=19):   # mosaic Wayback z19 tiles over a 3857 bbox, resampled to w x hh
+    def _wb(a, b, cc, dd, w, hh, z=int(d.get('sat_zoom', 19))):   # old releases can be hazy at z19 but crisp at z18   # mosaic Wayback z19 tiles over a 3857 bbox, resampled to w x hh
         R0 = 20037508.342789244; ts = 2 * R0 / 2 ** z
         c0, c1 = int((a + R0) // ts), int((cc + R0) // ts); r0, r1 = int((R0 - dd) // ts), int((R0 - b) // ts)
         mo = np.zeros(((r1 - r0 + 1) * 256, (c1 - c0 + 1) * 256, 3), np.uint8)

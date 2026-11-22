@@ -1,29 +1,4 @@
-# 22 Nov links redraw with dune-grass rough
-ardglass:render
-ballybunion:render
-baltray:render
-bushfoot:render
-carne:render
-castlerock:render
-county-sligo:render
-enniscrone:render
-european:render
-galfch-rsa-oile-n-na-cruite:render
-greencastle:render
-island:render
-lahinch-old:render
-portmarnock-2:render
-portmarnock:render
-portstewart-strand:render
-rosapenna:render
-rosslare:render
-royal-county-down-annesley:render
-royal-county-down-championship:render
-royal-dublin:render
-royal-portrush-dunluce:render
-royal-portrush-valley:render
-st-annes:render
-strandhill:render
-tralee:render
-waterville:render
-old-head:render
+# 22 Nov: clear older photos for cloudy courses
+ardglass
+lahinch-old
+dundrum-house
