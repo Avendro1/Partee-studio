@@ -58,7 +58,7 @@ def conifer(seed, S=256):
     t[..., 3] *= np.clip((1.02 + .08 * st - rr) * 10, 0, 1)   # spiky silhouette
     return t
 def gorse(seed, S=256):   # links gorse/scrub: low, dense dark-olive bush with yellow flower specks, flatter shading
-    t = deciduous(900 + seed, S, base=(.17, .25, .08), n=170, lumpy=.35)
+    t = deciduous(900 + seed, S, base=(.33, .42, .24), n=170, lumpy=.35)   # Shane 22 Nov: was near-black; satellite gorse/scrub reads ~ (65,80,50)
     r = np.random.default_rng(seed); a = t[..., 3]
     fl = (ndi.gaussian_filter(r.standard_normal((S, S)), 1.2) > 1.9) & (a > .5)
     t[..., :3] = np.where(fl[..., None], np.array([.85, .72, .18]) * (.7 + .3 * t[..., 1:2] / max(1e-3, t[..., 1].max())), t[..., :3])

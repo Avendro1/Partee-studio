@@ -263,7 +263,7 @@ for c in cr:
     X, Y = px(c[0], c[1]); R = c[2] * PPM; yy0, xx0 = int(Y - R * 2.6), int(X - R * 2.6)
     sl = (slice(max(0, yy0), min(H, int(Y + R * 2.6))), slice(max(0, xx0), min(W, int(X + R * 2.6))))
     gy_, gx_ = np.mgrid[sl]; tm_[sl] = np.maximum(tm_[sl], np.clip(1.15 - np.hypot(gx_ - X, gy_ - Y) / R, 0, 1))
-    g_ = len(c) > 3 and c[3] == 'gorse'; o = R * (.35 if g_ else 1.05); shd[sl] = np.maximum(shd[sl], np.clip(1.1 - np.hypot(gx_ - X - o, gy_ - Y - o) / (R * .98), 0, 1))
+    g_ = len(c) > 3 and c[3] == 'gorse'; o = R * (.35 if g_ else 1.05); shd[sl] = np.maximum(shd[sl], np.clip(1.1 - np.hypot(gx_ - X - o, gy_ - Y - o) / (R * .98), 0, 1) * (.45 if g_ else 1))
 mul(blur(tm_, 4) * 1.4, .88)                     # ambient occlusion under canopy edges
 mul(blur(shd, .6) * (1 - tm_ * .0), .62)          # cast shadows
 dens = blur((tm_ > .05).astype(np.float32), 2.5); floor = blur(np.clip((dens - .45) * 2.5, 0, 1), 1)
