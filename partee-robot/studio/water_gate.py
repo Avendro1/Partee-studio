@@ -28,7 +28,7 @@ def gate(feats, sat, water_no=(), water_yes=()):
 GD = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gate')
 def _stored(d):
     import json
-    for p in (f"/tmp/claude-0/osm/gate/{d['key']}.json", os.path.join(GD, d['key'] + '.json')):
+    for p in ((os.path.join(GD, d['key'] + '.json'),) if os.environ.get('GATE_REPLAY') else (f"/tmp/claude-0/osm/gate/{d['key']}.json", os.path.join(GD, d['key'] + '.json'))):
         if os.path.exists(p): return json.load(open(p))
 def _save(d, **kv):
     import json
@@ -42,7 +42,7 @@ def gate_course(d):
     from shapely.geometry import LineString; from shapely.ops import unary_union; import json
     z = unary_union([LineString(h['pts']).buffer(110) for h in d['holes'] if len(h['pts']) > 1]).bounds
     sat = {'path': f"/tmp/claude-0/osm/sat/{d['key']}-0.3.png", 'x0': z[0], 'y1': z[3], 'mpp': .3}
-    if not os.path.exists(sat['path']) and _stored(d) and 'water' in _stored(d):   # replay the photo run's decision
+    if (not os.path.exists(sat['path']) or os.environ.get('GATE_REPLAY')) and _stored(d) and 'water' in _stored(d):   # replay the photo run's decision
         keep = [Point(p) for p in _stored(d)['water']]
         return [[k, c] for k, c in d['feats'] if k != 'water' or any(Polygon(np.array(c).reshape(-1, 2)).buffer(0).representative_point().distance(q) < .2 for q in keep)]
     f, rep = gate(d['feats'], sat, d.get('water_no', []), d.get('water_yes', []))
@@ -57,7 +57,7 @@ def crown_gate(d):
     from shapely.geometry import LineString; from shapely.ops import unary_union
     z = unary_union([LineString(h['pts']).buffer(110) for h in d['holes'] if len(h['pts']) > 1]).bounds
     p = f"/tmp/claude-0/osm/sat/{d['key']}-0.3.png"
-    if not os.path.exists(p) and d.get('crowns') and _stored(d) and 'crowns' in _stored(d):   # replay the photo run's decision
+    if (not os.path.exists(p) or os.environ.get('GATE_REPLAY')) and d.get('crowns') and _stored(d) and 'crowns' in _stored(d):   # replay the photo run's decision
         ks = set(_stored(d)['crowns']); return [c for i, c in enumerate(d['crowns']) if i in ks]
     if not os.path.exists(p) or not d.get('crowns'): return d.get('crowns', [])
     im = cv2.imread(p); x0, y1, mpp = z[0], z[3], .3

@@ -208,7 +208,7 @@ for p in polys.get('parking', []):
             fill(cm2, cc); fill(cm2 * (np.abs(wy - row) < .8), cc * .55 + .1, .8); fill(cm2 * (np.abs(wy - row) < .7) * (wx < xc), np.array([1, 1, 1.]), .12)
   crop_off()
 # buildings: drop shadow, two-tone roof (gable), parapet line
-for b in polys.get('building', []):
+for b in [g_ for b0_ in polys.get('building', []) for g_ in getattr(b0_, 'geoms', [b0_]) if g_.geom_type == 'Polygon']:   # a self-touching footprint can come back as a MultiPolygon (Carnalea 12 crashed)
   if not crop_on(b.bounds, 8): continue
   if True:
     bm_ = mask([b]); mul(blur(np.clip(shift(bm_, 3.5, 3.5) - bm_, 0, 1), .6), .55)
@@ -293,7 +293,8 @@ if os.environ.get('NUMS') == '1' and len(LINES) > 1:
     from PIL import ImageFont
     ov = Image.new('RGBA', (W, H), (0, 0, 0, 0)); od = ImageDraw.Draw(ov); rpx = max(9, int(5.5 * PPM))
     if os.environ.get('REF_PPM'): R_ = float(os.environ['REF_PPM']); rpx = int(round(max(9, int(5.5 * R_)) * PPM / R_))   # print run: numbers keep their preview size
-    fnt = ImageFont.truetype('/home/user/avendro-web-v2/partee-robot/fonts/jost500.ttf', int(rpx * 1.15))
+    _fp = '/home/user/avendro-web-v2/partee-robot/fonts/jost500.ttf'; _fp = _fp if os.path.exists(_fp) else os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'fonts', 'jost500.ttf')
+    fnt = ImageFont.truetype(_fp, int(rpx * 1.15))
     for h in d['holes']:
         if len(h['pts']) < 2: continue
         (ax, ay), (bx, by) = h['pts'][0], h['pts'][1]; Ln = math.hypot(bx - ax, by - ay) or 1
