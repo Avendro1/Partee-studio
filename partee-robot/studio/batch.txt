@@ -1,3 +1,7 @@
+# 23 Nov 01:20: water confirmed/traced by eye on satellite: Malone lake + river, Omagh river, Palmerstown top lake
+malone:render
+omagh:render
+palmerstown-house-estate:render
 # 23 Nov 01:45: Dublin Mountain: 2 ponds traced from satellite by eye
 dublin-mountain:render
 # 23 Nov 01:10: fairways traced from cross-sections of the satellite (xsec.py), eye-checked: Leopardstown 9 holes, Slade Valley 12
