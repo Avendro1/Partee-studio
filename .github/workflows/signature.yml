@@ -1,0 +1,65 @@
+# Signature previews: re-renders shop courses in the premium poster layout (3 colourways).
+# Start it by editing partee-robot/studio/sig/batch.txt and pushing.
+name: signature
+on:
+  push:
+    paths: ['partee-robot/studio/sig/batch.txt']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.s.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: s
+        run: |
+          python3 - <<'P' >> $GITHUB_OUTPUT
+          import json
+          keys = [k.strip() for k in open('partee-robot/studio/sig/batch.txt') if k.strip() and not k.startswith('#')]
+          n = min(20, max(1, len(keys)))
+          print('shards=' + json.dumps([' '.join(keys[i::n]) for i in range(n)]))
+          P
+  run:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        keys: ${{ fromJson(needs.plan.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Install
+        run: pip install -q numpy scipy shapely pillow opencv-python-headless
+      - name: Same paths as the studio machine
+        run: |
+          sudo mkdir -p /home/user /tmp/claude-0/osm/stamp; sudo chmod -R 777 /tmp/claude-0 /home/user
+          ln -s $GITHUB_WORKSPACE /home/user/avendro-web-v2
+          cp partee-robot/studio/{stamper,trees2d,hole_input,course_input,water_gate}.py /tmp/claude-0/osm/stamp/
+      - name: Render
+        run: |
+          for K in ${{ matrix.keys }}; do bash partee-robot/studio/sig/run.sh $K || echo "FAILED $K" | tee -a out/sig-failed.txt; done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: 'sig-${{ strategy.job-index }}', path: out, retention-days: 30 }
+  save:
+    needs: run
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: shards }
+      - name: Commit previews (island PNGs stay in the artifacts)
+        run: |
+          mkdir -p sig-out
+          for s in shards/*; do cp $s/sig/*.webp $s/sig/*.txt sig-out/ 2>/dev/null || true; cat $s/sig-failed.txt >> sig-out/failed.txt 2>/dev/null || true; done
+          git config user.name "partee-studio-bot"; git config user.email "partee-studio-bot@users.noreply.github.com"
+          git add sig-out
+          git commit -m "Signature previews" || exit 0
+          for i in 1 2 3 4; do git pull --rebase -q && git push && break; sleep $((i*10)); done
