@@ -1,6 +1,8 @@
 # Only the lines below run. Older entries are kept commented out so a push never re-runs them.
+# 23 Nov 08:55: Gowran Park: building on the infield pond removed
+gowran-park:render
 # 23 Nov 08:40: Carton Montgomerie: 27 path pieces mis-tagged as bunkers removed
-carton-house-montgomerie:render
+# carton-house-montgomerie:render
 # 23 Nov 08:20: Gowran Park sand bunkers from bright-sand blobs, 2 infield ponds seed-filled + water_yes (eye-checked)
 # gowran-park:render
 # 23 Nov 07:45: Leopardstown tree rows + bunkers inside the racecourse from the satellite-only tracer (rails removed, eye-checked overlay)
