@@ -1,3 +1,7 @@
+# 23 Nov 02:15: Scarke x2 retrace at z17 (18358 z19 tiles are older farmland); Slade Valley full retrace (no trees/bunkers)
+scarke
+scarke-par-3
+slade-valley
 # 23 Nov 01:50: no tree crowns on gated open water (ponds were hidden under trees)
 malone:render
 dublin-mountain:render
