@@ -1,6 +1,9 @@
 # Only the lines below run. Older entries are kept commented out so a push never re-runs them.
+# 23 Nov 10:20: Strandhill full retrace on Wayback 60013 (current photo has cloud over holes 4-6); Tramore redraw with current code
+strandhill
+tramore:render
 # 23 Nov 09:30: Carton O'Meara: hay meadow and path pieces mis-tagged as bunkers removed (low contrast / thin)
-carton-house-omeara:render
+# carton-house-omeara:render
 # 23 Nov 08:55: Gowran Park: building on the infield pond removed
 # gowran-park:render
 # 23 Nov 08:40: Carton Montgomerie: 27 path pieces mis-tagged as bunkers removed
