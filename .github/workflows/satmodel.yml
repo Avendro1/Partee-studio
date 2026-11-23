@@ -1,0 +1,36 @@
+# Teaches the fairway/green/bunker image model on our checked courses. Start: edit partee-robot/satpreview/unet/train.txt and push.
+name: satmodel
+on:
+  push:
+    paths: ['partee-robot/satpreview/unet/train.txt']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  train:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - uses: actions/cache@v4
+        with: { path: /tmp/udata, key: udata-v1 }
+      - name: Install
+        run: |
+          pip install -q numpy shapely opencv-python-headless
+          pip install -q torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install -q segmentation-models-pytorch
+      - name: Photos + labels
+        env: { SKIP: 'skibbereen-west-carbery enniscrone woodbrook fota-island tara-glen kilrea scarke scarke-par-3 abbey-par-3 arklow' }
+        run: python3 partee-robot/satpreview/unet/prep.py /tmp/udata | tail -20; ls /tmp/udata/*.png | wc -l
+      - name: Train
+        env: { ITERS: '2500' }
+        run: python3 partee-robot/satpreview/unet/train.py /tmp/udata partee-robot/satpreview/unet/model.pt
+      - uses: actions/upload-artifact@v4
+        with: { name: model, path: partee-robot/satpreview/unet/model.pt }
+      - name: Commit model
+        run: |
+          git config user.name "partee-studio-bot"; git config user.email "partee-studio-bot@users.noreply.github.com"
+          git add partee-robot/satpreview/unet/model.pt; git commit -m "Satellite model: trained" || exit 0
+          for i in 1 2 3 4; do git pull --rebase -q && git push && break; sleep $((i*10)); done
