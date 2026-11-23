@@ -1,3 +1,6 @@
+# 23 Nov 01:10: fairways traced from cross-sections of the satellite (xsec.py), eye-checked: Leopardstown 9 holes, Slade Valley 12
+leopardstown:render
+slade-valley:render
 # 22 Nov 22:00: 5 missing fairways traced from satellite (tree-bounded only)
 carton-house-montgomerie:render
 deerpark:render
