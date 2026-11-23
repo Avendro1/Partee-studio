@@ -1,7 +1,15 @@
 # Only the lines below run. Older entries are kept commented out so a push never re-runs them.
+# 23 Nov 10:45: links courses: OSM "wood" areas (dune scrub mapped as forest) dropped; trees come from photo crowns only
+european:render
+baltray:render
+royal-county-down-championship:render
+royal-county-down-annesley:render
+portstewart-strand:render
+enniscrone:render
+rosslare:render
 # 23 Nov 10:20: Strandhill full retrace on Wayback 60013 (current photo has cloud over holes 4-6); Tramore redraw with current code
-strandhill
-tramore:render
+# strandhill
+# tramore:render
 # 23 Nov 09:30: Carton O'Meara: hay meadow and path pieces mis-tagged as bunkers removed (low contrast / thin)
 # carton-house-omeara:render
 # 23 Nov 08:55: Gowran Park: building on the infield pond removed
