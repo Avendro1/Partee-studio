@@ -25,8 +25,10 @@ jobs:
         env: { SKIP: 'skibbereen-west-carbery enniscrone woodbrook fota-island tara-glen kilrea scarke scarke-par-3 abbey-par-3 arklow' }
         run: python3 partee-robot/satpreview/unet/prep.py /tmp/udata | tail -20; ls /tmp/udata/*.png | wc -l
       - name: Train
-        env: { ITERS: '2500' }
-        run: python3 partee-robot/satpreview/unet/train.py /tmp/udata partee-robot/satpreview/unet/model.pt
+        env: { ITERS: '6000', INIT: 'partee-robot/satpreview/unet/model.pt', LR: '5e-4', CW: '1 2 3 5 2 1 5 1' }
+        run: |
+          cp partee-robot/satpreview/unet/model.pt /tmp/init.pt
+          INIT=/tmp/init.pt python3 partee-robot/satpreview/unet/train.py /tmp/udata partee-robot/satpreview/unet/model.pt
       - uses: actions/upload-artifact@v4
         with: { name: model, path: partee-robot/satpreview/unet/model.pt }
       - name: Commit model

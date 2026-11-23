@@ -18,11 +18,12 @@ def crop(k, aug=True):
     return ((i - MEAN) / STD).transpose(2, 0, 1).copy(), l.astype(np.int64).copy()
 def batch(ks, n, aug=True):
     xs, ys = zip(*[crop(random.choice(ks), aug) for _ in range(n)]); return torch.tensor(np.stack(xs), dtype=torch.float32), torch.tensor(np.stack(ys))
-m = smp.Unet('resnet18', encoder_weights='imagenet', classes=8)
-w = torch.tensor([1, 2, 3, 3, 2, 1, 3, 1], dtype=torch.float32)   # small things (greens, bunkers, tees) count more
+m = smp.Unet('resnet18', encoder_weights=None if os.environ.get('INIT') else 'imagenet', classes=8)
+if os.environ.get('INIT'): m.load_state_dict({k: v.float() for k, v in torch.load(os.environ['INIT'], map_location='cpu').items()}); print('resumed', flush=True)
+w = torch.tensor([float(x) for x in os.environ.get('CW', '1 2 3 3 2 1 3 1').split()])   # small things (greens, bunkers, tees) count more
 lossf = torch.nn.CrossEntropyLoss(weight=w, ignore_index=255)
 opt = torch.optim.AdamW(m.parameters(), 1e-3, weight_decay=1e-4); IT = int(os.environ.get('ITERS', '2500'))
-sch = torch.optim.lr_scheduler.OneCycleLR(opt, 1e-3, total_steps=IT); t0 = time.time(); random.seed(1); VX, VY = batch(val, 48, False)
+LR = float(os.environ.get('LR', '1e-3')); sch = torch.optim.lr_scheduler.OneCycleLR(opt, LR, total_steps=IT); t0 = time.time(); random.seed(1); VX, VY = batch(val, 48, False)
 for it in range(IT):
     m.train(); x, y = batch(tr, 8); loss = lossf(m(x), y); opt.zero_grad(); loss.backward(); opt.step(); sch.step()
     if it % 250 == 0 or it == IT - 1:
