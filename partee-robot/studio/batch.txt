@@ -1,3 +1,5 @@
+# 23 Nov 04:25: Dublin Mountain holes 12-17 drawn tee-to-green on the satellite (numbering checked against club routing)
+dublin-mountain:render
 # 23 Nov 02:55: Slade Valley trees + bunkers from the satellite-only tracer (eye-checked overlay)
 slade-valley:render
 # 23 Nov 02:15: Scarke x2 retrace at z17 (18358 z19 tiles are older farmland); Slade Valley full retrace (no trees/bunkers)
