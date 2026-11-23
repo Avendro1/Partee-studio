@@ -1,3 +1,6 @@
+# 23 Nov 06:50: Spa 14/15 and Leopardstown 12/14 fairways drawn by eye on the satellite
+spa:render
+leopardstown:render
 # 23 Nov 04:25: Dublin Mountain holes 12-17 drawn tee-to-green on the satellite (numbering checked against club routing)
 dublin-mountain:render
 # 23 Nov 02:55: Slade Valley trees + bunkers from the satellite-only tracer (eye-checked overlay)
