@@ -1,3 +1,8 @@
+# 23 Nov 01:35: retrace from clearer Wayback photos (checked by eye): Scarke x2 + Gowran 18358 (course visible / fairways mown), Waterford Castle 60013 (no cloud)
+scarke
+scarke-par-3
+gowran-park
+waterford-castle
 # 23 Nov 01:20: water confirmed/traced by eye on satellite: Malone lake + river, Omagh river, Palmerstown top lake
 malone:render
 omagh:render
