@@ -27,9 +27,10 @@ def rast(polys, x0, y1, H, W, ero=0):
     if ero: m = cv2.erode(m, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(ero / MPP) * 2 + 1,) * 2))
     return m > 0
 
+MODEL = os.environ.get('MODEL')
 # ---- teach on checked courses
 Xs, ys = [], []; rng = np.random.default_rng(0)
-for k in TRAIN:
+for k in ([] if MODEL else TRAIN):
     d = json.load(open(f'/home/user/partee-studio/partee-site/courses/{k}.json')); im = cv2.imread(f'/tmp/claude-0/osm/sat/{k}-0.3.png')
     if im is None: continue
     x0, y0, x1, y1 = frame_of(d); H, W = im.shape[:2]; F = {}
@@ -52,8 +53,9 @@ for k in TRAIN:
         ii = np.flatnonzero(lbl.ravel() == c)
         if len(ii): ii = rng.choice(ii, min(12000, len(ii)), replace=False); Xs.append(X.reshape(-1, X.shape[-1])[ii]); ys.append(np.full(len(ii), c))
     print('taught', k, flush=True)
-X_ = np.concatenate(Xs); y_ = np.concatenate(ys); print({CL[c]: int((y_ == c).sum()) for c in range(len(CL))}, flush=True)
-rf = RandomForestClassifier(n_estimators=80, max_depth=20, min_samples_leaf=5, n_jobs=4, random_state=0).fit(X_, y_)
+if not MODEL:
+    X_ = np.concatenate(Xs); y_ = np.concatenate(ys); print({CL[c]: int((y_ == c).sum()) for c in range(len(CL))}, flush=True)
+    rf = RandomForestClassifier(n_estimators=80, max_depth=20, min_samples_leaf=5, n_jobs=4, random_state=0).fit(X_, y_)
 
 # ---- new course: boundary -> local metres -> photo
 g = json.load(open(bnd)); g = g[0]['geojson'] if isinstance(g, list) else g
@@ -76,9 +78,14 @@ else:
     cv2.imwrite(cache, im)
 H, W = im.shape[:2]; print('photo', W, H, flush=True)
 inb = rast([np.array(Bm.buffer(10).exterior.coords)], x0, y1, H, W)
-X = features(im).reshape(-1, 20); cls = np.full(H * W, 0, np.int8); ii = np.flatnonzero(inb.ravel())
-for s in range(0, len(ii), 1_500_000): cls[ii[s:s + 1_500_000]] = rf.predict(X[ii[s:s + 1_500_000]])
-cls = cls.reshape(H, W); cls[~inb] = -1
+if MODEL:
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'unet')); from predict import classify
+    cls = classify(im, MPP).astype(np.int8)
+else:
+    X = features(im).reshape(-1, 20); cls = np.full(H * W, 0, np.int8); ii = np.flatnonzero(inb.ravel())
+    for s in range(0, len(ii), 1_500_000): cls[ii[s:s + 1_500_000]] = rf.predict(X[ii[s:s + 1_500_000]])
+    cls = cls.reshape(H, W)
+cls[~inb] = -1
 met = lambda p: np.stack([x0 + p[:, 0] * MPP, y1 - p[:, 1] * MPP], 1)
 k_ = lambda r: cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (int(r / MPP) * 2 + 1,) * 2)
 def clean(m, r): return cv2.morphologyEx(cv2.morphologyEx(m.astype(np.uint8), cv2.MORPH_OPEN, k_(r)), cv2.MORPH_CLOSE, k_(r))
@@ -93,14 +100,16 @@ def shapes(m, amin, amax=1e9, simp=.6):
 feats = []
 _gr = clean(((cls == 0) | (cls == 1)) & inb, 1.5)   # all open grass; the classifier can't split fairway from rough, so fairway = the middle of each open corridor
 _fw = cv2.dilate(cv2.erode(_gr, k_(float(os.environ.get('FWE', '11')))), k_(5)) & _gr
-fw = shapes(clean(_fw, 2.5), 1500)
+if MODEL: _fw = (cls == 1) & inb   # the model tells fairway from rough itself
+fw = shapes(clean(_fw, 2.5), 600 if MODEL else 1500)
+te = shapes(clean((cls == 6) & inb, .8), 25, 900) if MODEL else []
 gr = [p for p in shapes(clean(cls == 2, .8), 120, 1600) if 4 * math.pi * p.area / p.length ** 2 > .45]
 bk = [p for p in shapes(clean(cls == 3, .4), 12, 600)]
 # water only where the photo is smooth and dark (same rule as the checked courses)
 lab = cv2.cvtColor(im, cv2.COLOR_BGR2LAB).astype(np.float32); sd = np.sqrt(np.maximum(cv2.blur(lab[..., 0] ** 2, (15, 15)) - cv2.blur(lab[..., 0], (15, 15)) ** 2, 0))
 wm = clean((cls == 4) & (lab[..., 0] < 95) & (sd < 7), 1.5)
 wa = shapes(wm, 400)
-for t, L in (('fairway', fw), ('green', gr), ('bunker', bk), ('water', wa)):
+for t, L in (('fairway', fw), ('green', gr), ('bunker', bk), ('water', wa), ('tee', te)):
     for p in L: feats.append([t, [round(v, 1) for xy in p.exterior.coords for v in xy]])
 # trees: canopy pixels -> crowns
 can = clean(((cls == 5) | ((cls == 4) & ~wm.astype(bool))) & inb, .9); f = 2; small = cv2.resize(can, (W // f, H // f), interpolation=cv2.INTER_NEAREST)

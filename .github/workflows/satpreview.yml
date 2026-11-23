@@ -38,6 +38,8 @@ jobs:
       - name: Install + paths
         run: |
           pip install -q numpy scipy shapely pillow opencv-python-headless scikit-learn
+          pip install -q torch torchvision --index-url https://download.pytorch.org/whl/cpu
+          pip install -q segmentation-models-pytorch
           sudo mkdir -p /home/user /tmp/claude-0/osm/{sat,stamp} /tmp/claude-0/sp/out; sudo chmod -R 777 /tmp/claude-0 /home/user
           ln -s $GITHUB_WORKSPACE /home/user/partee-studio
           cp partee-robot/studio/trees2d.py /tmp/claude-0/osm/stamp/
@@ -47,9 +49,10 @@ jobs:
           s = s.replace(a, "if d.get('boundary'): core = Polygon(d['boundary']).buffer(0).buffer(8)\n" + a, 1)
           open('/tmp/claude-0/osm/stamp/stamper_so.py', 'w').write(s)
           P
-          python3 partee-robot/satpreview/prep_train.py $GITHUB_WORKSPACE
+          [ -f partee-robot/satpreview/unet/model.pt ] || python3 partee-robot/satpreview/prep_train.py $GITHUB_WORKSPACE
       - name: Trace + render
         run: |
+          [ -f partee-robot/satpreview/unet/model.pt ] && export MODEL=$GITHUB_WORKSPACE/partee-robot/satpreview/unet/model.pt
           for K in ${{ matrix.keys }}; do
             bash partee-robot/satpreview/run_one.sh $K > /tmp/claude-0/sp/$K.log 2>&1 || echo "FAILED $K" >> /tmp/claude-0/sp/failed.txt
             tail -5 /tmp/claude-0/sp/$K.log
