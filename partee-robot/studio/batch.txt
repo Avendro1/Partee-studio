@@ -1,35 +1,36 @@
+# Only the lines below run. Older entries are kept commented out so a push never re-runs them.
 # 23 Nov 07:00: Palmerstown paddock fairways removed (fairway shapes more than 30 m from every hole line)
 palmerstown-house-estate:render
 # 23 Nov 06:50: Spa 14/15 and Leopardstown 12/14 fairways drawn by eye on the satellite
 spa:render
 leopardstown:render
 # 23 Nov 04:25: Dublin Mountain holes 12-17 drawn tee-to-green on the satellite (numbering checked against club routing)
-dublin-mountain:render
+# dublin-mountain:render
 # 23 Nov 02:55: Slade Valley trees + bunkers from the satellite-only tracer (eye-checked overlay)
-slade-valley:render
+# slade-valley:render
 # 23 Nov 02:15: Scarke x2 retrace at z17 (18358 z19 tiles are older farmland); Slade Valley full retrace (no trees/bunkers)
-scarke
-scarke-par-3
-slade-valley
+# scarke
+# scarke-par-3
+# slade-valley
 # 23 Nov 01:50: no tree crowns on gated open water (ponds were hidden under trees)
-malone:render
-dublin-mountain:render
-palmerstown-house-estate:render
+# malone:render
+# dublin-mountain:render
+# palmerstown-house-estate:render
 # 23 Nov 01:35: retrace from clearer Wayback photos (checked by eye): Scarke x2 + Gowran 18358 (course visible / fairways mown), Waterford Castle 60013 (no cloud)
-scarke
-scarke-par-3
-gowran-park
-waterford-castle
+# scarke
+# scarke-par-3
+# gowran-park
+# waterford-castle
 # 23 Nov 01:20: water confirmed/traced by eye on satellite: Malone lake + river, Omagh river, Palmerstown top lake
-malone:render
-omagh:render
-palmerstown-house-estate:render
+# malone:render
+# omagh:render
+# palmerstown-house-estate:render
 # 23 Nov 01:45: Dublin Mountain: 2 ponds traced from satellite by eye
-dublin-mountain:render
+# dublin-mountain:render
 # 23 Nov 01:10: fairways traced from cross-sections of the satellite (xsec.py), eye-checked: Leopardstown 9 holes, Slade Valley 12
-leopardstown:render
-slade-valley:render
+# leopardstown:render
+# slade-valley:render
 # 22 Nov 22:00: 5 missing fairways traced from satellite (tree-bounded only)
-carton-house-montgomerie:render
-deerpark:render
-raffeen-creek:render
+# carton-house-montgomerie:render
+# deerpark:render
+# raffeen-creek:render
