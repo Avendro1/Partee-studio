@@ -1,154 +1,307 @@
 # Only the lines below run. Older entries are kept commented out so a push never re-runs them.
-# 23 Nov 14:40: redraw every course: stamper canvas now covers the island round each hole line (Old Head 16 had a square cut edge)
-abbey-par-3:render
-ardglass:render
-arklow:render
-balla-par3:render
-ballinamore:render
-ballinascorney:render
-ballinasloe:render
-ballybunion:render
-ballyclare:render
-ballyhaunis:render
-ballymena:render
-baltray:render
-bangor:render
-bearna:render
-belvoir:render
-birr:render
-blacklion:render
-blackwater:render
-blackwood:render
+# 23 Nov 16:50: render-only redraw of all 153 shop courses with the same code the print files now use; saves water/tree decisions to gate/ so the order robot can replay them
 bunclody:render
-burrow:render
-bushfoot:render
-cahir-park:render
-cairndhu:render
-carnalea:render
-carne:render
-carrick-on-shannon:render
-carrickfergus:render
-carrickmines:render
-carton-house-montgomerie:render
-carton-house-omeara:render
-castle:render
-castle-dargan:render
-castlebar:render
-castlerock:render
-castletroy:render
-castlewarden:render
-clontarf-bowling:render
-coollattin:render
+mount-wolseley:render
+blacklion:render
+woodstock:render
+shannon:render
 cork:render
-county-longford:render
-county-sligo:render
-courtown:render
-deer-park:render
-deerpark:render
-donaghadee:render
-douglas:render
-dublin-mountain:render
-dundrum-house:render
-dunmurry:render
-edmondstown:render
-elmgreen:render
-enniscorthy:render
-enniscrone:render
-enniskillen:render
-european:render
-faithlegg:render
-fermoy:render
-fintona:render
-fota-island:render
-foxrock:render
+greencastle:render
 galfch-rsa-oile-n-na-cruite:render
-galgorm-castle:render
+royal-dublin:render
+elmgreen:render
+milltown:render
+clontarf-bowling:render
+dublin-mountain:render
+bearna:render
+ballinasloe:render
+mountbellew:render
 galway:render
 galway-bay:render
 glenlo-abbey:render
-gowran-park:render
-grange-castle:render
-greenacres:render
-greencastle:render
-headfort:render
-heritage:render
-hermitage:render
-hilton-templepatrick:render
-island:render
-k-palmer-north:render
-k-straffan-south:render
-kenmare:render
+ballybunion:render
+tralee:render
 killarney-fishing:render
-killeen:render
-killymoon:render
-kilrea:render
-kirkiston-castle:render
-leopardstown:render
-lisheens-springs:render
-lurgan:render
-mahon:render
-malone:render
-manor-house:render
-massereene:render
-millicent:render
-milltown:render
-mount-juliet:render
-mount-wolseley:render
-mountbellew:render
-moyola-park:render
-moyvalley:render
-muskerry:render
-new-ross:render
-newlands:render
-old-head:render
-omagh:render
-palmerstown-house-estate:render
-portadown:render
-portarlington:render
-portmarnock:render
-portmarnock-2:render
-portstewart-strand:render
-raffeen-creek:render
-rathaspeck-manor:render
-rathcore:render
-rathfarnham:render
+kenmare:render
 ring-of-kerry:render
-rosapenna:render
-rosslare:render
-royal-county-down-annesley:render
-royal-county-down-championship:render
-royal-dublin:render
-royal-portrush-dunluce:render
-royal-portrush-valley:render
-saint-margarets:render
-scarke:render
-scarke-par-3:render
-scrabo:render
-shandon-park:render
-shannon:render
-silloge-park-public:render
-skibbereen-west-carbery:render
-slade-valley:render
-spa:render
-st-helen-s-bay:render
-st-patricks:render
-stackstown:render
-stepaside:render
+millicent:render
+killeen:render
+castlewarden:render
+k-straffan-south:render
+new-ross:render
+mount-juliet:render
+heritage:render
+ballinamore:render
+castletroy:render
+county-longford:render
+baltray:render
+ballyhaunis:render
+westport:render
+castlebar:render
+balla-par3:render
+rathcore:render
+tullamore:render
+birr:render
+portarlington:render
+carrick-on-shannon:render
+county-sligo:render
+enniscrone:render
 strandhill:render
-tara-glen:render
+castle-dargan:render
 thurles:render
 tipperary-driving-range:render
-tralee:render
-tramore:render
-tulfarris-hotel:render
-tullamore:render
+cahir-park:render
+dundrum-house:render
 waterford-castle:render
-waterville:render
-westport:render
-wexford:render
+tramore:render
+faithlegg:render
 williamstown:render
+wexford:render
+st-helen-s-bay:render
+tara-glen:render
+rosslare:render
+rathaspeck-manor:render
+enniscorthy:render
+scarke:render
+abbey-par-3:render
+scarke-par-3:render
+courtown:render
+blackwater:render
+european:render
+coollattin:render
+carne:render
+grange-castle:render
+leopardstown:render
 woodbrook:render
-woodstock:render
+waterville:render
+k-palmer-north:render
+old-head:render
+stepaside:render
+carrickmines:render
+portmarnock:render
+tulfarris-hotel:render
+douglas:render
+island:render
+deerpark:render
+mahon:render
+muskerry:render
+rosapenna:render
+gowran-park:render
+headfort:render
+hermitage:render
+portmarnock-2:render
+lisheens-springs:render
+burrow:render
+carton-house-montgomerie:render
+castle:render
+palmerstown-house-estate:render
+saint-margarets:render
+slade-valley:render
+portstewart-strand:render
+carrickfergus:render
+moyola-park:render
+lurgan:render
+castlerock:render
+donaghadee:render
+galgorm-castle:render
+belvoir:render
+malone:render
+royal-county-down-championship:render
+dunmurry:render
+st-patricks:render
+massereene:render
+royal-portrush-dunluce:render
+royal-portrush-valley:render
+ballyclare:render
+scrabo:render
+blackwood:render
+cairndhu:render
+ballymena:render
+kirkiston-castle:render
+ardglass:render
+hilton-templepatrick:render
+carnalea:render
+greenacres:render
+killymoon:render
+bangor:render
+shandon-park:render
+bushfoot:render
+royal-county-down-annesley:render
+enniskillen:render
+rathfarnham:render
+edmondstown:render
+deer-park:render
+silloge-park-public:render
+carton-house-omeara:render
+newlands:render
+omagh:render
+portadown:render
+stackstown:render
+moyvalley:render
+spa:render
+kilrea:render
+fota-island:render
+foxrock:render
+ballinascorney:render
+skibbereen-west-carbery:render
+fermoy:render
+raffeen-creek:render
+manor-house:render
+fintona:render
+arklow:render
+druids-glen:render
+lahinch-old:render
+killeen-castle:render
+st-annes:render
+# abbey-par-3:render
+# ardglass:render
+# arklow:render
+# balla-par3:render
+# ballinamore:render
+# ballinascorney:render
+# ballinasloe:render
+# ballybunion:render
+# ballyclare:render
+# ballyhaunis:render
+# ballymena:render
+# baltray:render
+# bangor:render
+# bearna:render
+# belvoir:render
+# birr:render
+# blacklion:render
+# blackwater:render
+# blackwood:render
+# bunclody:render
+# burrow:render
+# bushfoot:render
+# cahir-park:render
+# cairndhu:render
+# carnalea:render
+# carne:render
+# carrick-on-shannon:render
+# carrickfergus:render
+# carrickmines:render
+# carton-house-montgomerie:render
+# carton-house-omeara:render
+# castle:render
+# castle-dargan:render
+# castlebar:render
+# castlerock:render
+# castletroy:render
+# castlewarden:render
+# clontarf-bowling:render
+# coollattin:render
+# cork:render
+# county-longford:render
+# county-sligo:render
+# courtown:render
+# deer-park:render
+# deerpark:render
+# donaghadee:render
+# douglas:render
+# dublin-mountain:render
+# dundrum-house:render
+# dunmurry:render
+# edmondstown:render
+# elmgreen:render
+# enniscorthy:render
+# enniscrone:render
+# enniskillen:render
+# european:render
+# faithlegg:render
+# fermoy:render
+# fintona:render
+# fota-island:render
+# foxrock:render
+# galfch-rsa-oile-n-na-cruite:render
+# galgorm-castle:render
+# galway:render
+# galway-bay:render
+# glenlo-abbey:render
+# gowran-park:render
+# grange-castle:render
+# greenacres:render
+# greencastle:render
+# headfort:render
+# heritage:render
+# hermitage:render
+# hilton-templepatrick:render
+# island:render
+# k-palmer-north:render
+# k-straffan-south:render
+# kenmare:render
+# killarney-fishing:render
+# killeen:render
+# killymoon:render
+# kilrea:render
+# kirkiston-castle:render
+# leopardstown:render
+# lisheens-springs:render
+# lurgan:render
+# mahon:render
+# malone:render
+# manor-house:render
+# massereene:render
+# millicent:render
+# milltown:render
+# mount-juliet:render
+# mount-wolseley:render
+# mountbellew:render
+# moyola-park:render
+# moyvalley:render
+# muskerry:render
+# new-ross:render
+# newlands:render
+# old-head:render
+# omagh:render
+# palmerstown-house-estate:render
+# portadown:render
+# portarlington:render
+# portmarnock:render
+# portmarnock-2:render
+# portstewart-strand:render
+# raffeen-creek:render
+# rathaspeck-manor:render
+# rathcore:render
+# rathfarnham:render
+# ring-of-kerry:render
+# rosapenna:render
+# rosslare:render
+# royal-county-down-annesley:render
+# royal-county-down-championship:render
+# royal-dublin:render
+# royal-portrush-dunluce:render
+# royal-portrush-valley:render
+# saint-margarets:render
+# scarke:render
+# scarke-par-3:render
+# scrabo:render
+# shandon-park:render
+# shannon:render
+# silloge-park-public:render
+# skibbereen-west-carbery:render
+# slade-valley:render
+# spa:render
+# st-helen-s-bay:render
+# st-patricks:render
+# stackstown:render
+# stepaside:render
+# strandhill:render
+# tara-glen:render
+# thurles:render
+# tipperary-driving-range:render
+# tralee:render
+# tramore:render
+# tulfarris-hotel:render
+# tullamore:render
+# waterford-castle:render
+# waterville:render
+# westport:render
+# wexford:render
+# williamstown:render
+# woodbrook:render
+# woodstock:render
 # 23 Nov: Arklow 15/18 tees split so the numbers do not overlap
 # arklow:render
 # 23 Nov: Arklow traced from the 2022 satellite (no OSM course data); hole order from the club map, scorecard and Golf Monthly review
