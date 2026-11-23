@@ -4,7 +4,6 @@ achill-island
 adare-manor
 ardee
 ardminnan
-ardnacrusha-pitch-putt
 arklow
 armagh
 ashbourne
@@ -79,7 +78,6 @@ concra-wood
 connemara
 connemara-isles
 corballis
-cornafean-pitch-and-putt
 corrstown
 county-cavan
 craddockstown
@@ -115,7 +113,6 @@ forrest-little
 fortwilliam
 foyle
 glen-mill
-glen-of-downs-closed
 glengarriff
 glenmalure
 glenville-par-3
@@ -159,7 +156,6 @@ laytown-bettystown
 lee-valley-country
 letterkenny
 liffey-valley-par-3
-limerick-driving-range
 limerick
 lisburn
 lismore
@@ -239,7 +235,6 @@ heath
 montgomerie
 o-meara
 royal-curragh
-tipperary-pitch-putt
 tobermore
 townley-hall
 tuam
@@ -260,3 +255,4 @@ youghal
 skibbereen-west-carbery
 enniscrone
 woodbrook
+# v2 model rerun 1942
