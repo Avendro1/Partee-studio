@@ -1,3 +1,5 @@
+# 23 Nov 07:00: Palmerstown paddock fairways removed (fairway shapes more than 30 m from every hole line)
+palmerstown-house-estate:render
 # 23 Nov 06:50: Spa 14/15 and Leopardstown 12/14 fairways drawn by eye on the satellite
 spa:render
 leopardstown:render
