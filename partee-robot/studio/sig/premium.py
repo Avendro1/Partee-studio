@@ -78,12 +78,16 @@ F = lambda n, sz: ImageFont.truetype(f'{FD}/{n}.ttf', int(sz))
 U = min(W, H) / 100
 name = c['name']
 import re
-m_ = re.search(r'\s+(Golf (Club|Course|Links|Resort)|Golf & Country Club)', name)
+m_ = re.search(r'\s+(Golf (Club|Course|Links|Resort|Centre)|Golf (&|and) \w+ Club)', name)
 if m_:
     line1 = name[:m_.start()]; rest = name[m_.start():].strip(' ,')
     line2 = ' · '.join(p.strip() for p in rest.split(',') if p.strip())
+elif ' - ' in name: line1, line2 = [t.strip() for t in name.split(' - ', 1)]
+elif ',' in name:  # e.g. 'Royal Portrush, Dunluce Links' -> title + second line
+    line1, line2 = [t.strip() for t in name.split(',', 1)]
 else: line1, line2 = name, 'Golf Club'
 line1 = line1.replace(' (Old Course)', '')
+line1 = re.sub(r'\s*(,|&|\band)\s*$', '', line1.strip())   # 'Tulfarris Hotel and' -> 'Tulfarris Hotel'
 def spaced(t, f, track): return sum(f.getlength(ch) for ch in t) + track * (len(t) - 1)
 def draw_sp(x, y, t, f, fill, track, anchor='l'):
     w = spaced(t, f, track); x = x - w / 2 if anchor == 'm' else (x - w if anchor == 'r' else x)
@@ -96,7 +100,14 @@ else:
     tx, ty, al = W / 2, H * .13, 'm'
 ft = F('corm500', U * 9.5)
 size = U * 9.5
-while spaced(line1.upper(), ft, U * 1.0) > (W * .26 if orient == 'land' else W * .8):
+maxw = W * .8
+if orient == 'land':  # as wide as possible without touching the course: stop short of the island in the title rows
+    r0, r1 = int(ty - U * 10 - oy), int(ty + U * 12 - oy)
+    band = A[max(0, r0):max(0, min(nh, r1))]
+    cols = np.where((band > .1).any(0))[0] if band.size else []
+    edge = ox + cols.min() if len(cols) else W
+    maxw = max(W * .2, min(W * .4, edge - tx - U * 4))
+while spaced(line1.upper(), ft, U * 1.0) > maxw:
     size *= .93; ft = F('corm500', size)
 w1 = draw_sp(tx, ty, line1.upper(), ft, ink, U * 1.0, al)
 fs = F('jost400', U * 2.4)
