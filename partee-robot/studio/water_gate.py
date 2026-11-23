@@ -47,7 +47,12 @@ def crown_gate(d):
     for k, c in d['feats']:
         if k == 'fairway': q = np.array(c).reshape(-1, 2); cv2.fillPoly(tf, [np.stack([(q[:, 0] - x0) / mpp, (y1 - q[:, 1]) / mpp], 1).astype(np.int32)], 1)
     gL = np.median(L[tf > 0]) if tf.any() else np.median(L); out = []
+    wm = np.zeros(g.shape, np.uint8)   # 23 Nov: no tree crowns on top of the (already gated) open water
+    for k, c in d['feats']:
+        if k == 'water': q = np.array(c).reshape(-1, 2); cv2.fillPoly(wm, [np.stack([(q[:, 0] - x0) / mpp, (y1 - q[:, 1]) / mpp], 1).astype(np.int32)], 1)
     for c in d['crowns']:
+        Xc, Yc = int((c[0] - x0) / mpp), int((y1 - c[1]) / mpp)
+        if 0 <= Yc < g.shape[0] and 0 <= Xc < g.shape[1] and wm[Yc, Xc]: continue
         X = (c[0] - x0) / mpp; Y = (y1 - c[1]) / mpp; r = max(2, c[2] * .7 / mpp)
         a, b, e, f = int(max(0, Y - r)), int(min(g.shape[0], Y + r + 1)), int(max(0, X - r)), int(min(g.shape[1], X + r + 1))
         if b <= a or f <= e: continue

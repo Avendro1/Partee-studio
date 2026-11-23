@@ -1,3 +1,7 @@
+# 23 Nov 01:50: no tree crowns on gated open water (ponds were hidden under trees)
+malone:render
+dublin-mountain:render
+palmerstown-house-estate:render
 # 23 Nov 01:35: retrace from clearer Wayback photos (checked by eye): Scarke x2 + Gowran 18358 (course visible / fairways mown), Waterford Castle 60013 (no cloud)
 scarke
 scarke-par-3
