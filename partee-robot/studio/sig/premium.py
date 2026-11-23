@@ -11,7 +11,9 @@ isl = np.asarray(Image.open(isl_p).convert('RGBA'), np.float32) / 255
 a = isl[..., 3]; ys, xs = np.where(a > .02); isl = isl[ys.min():ys.max() + 1, xs.min():xs.max() + 1]
 ih, iw = isl.shape[:2]
 if orient == 'auto': orient = 'land' if iw >= ih * .95 else 'port'
-W, H = (4724, 3543) if orient == 'land' else (3543, 4724)      # 40 x 30 cm at 300 dpi
+import os
+_sz = [int(v) for v in os.environ.get('SIZE', '3543x4724').split('x')]   # short x long side; default 30 x 40 cm at 300 dpi
+W, H = (max(_sz), min(_sz)) if orient == 'land' else (min(_sz), max(_sz))
 T = dict(
     charcoal=dict(bg=(20, 22, 19), bg2=(30, 33, 28), ink=(201, 169, 106), ink2=(160, 138, 95), wall=(52, 44, 30), grid=None, emblem='shamrock', panel=False),
     ivory=dict(bg=(241, 234, 219), bg2=(232, 223, 203), ink=(28, 40, 32), ink2=(92, 96, 82), wall=(96, 82, 58), grid=None, emblem='compass', panel=False),
@@ -36,7 +38,7 @@ d.rectangle([M * .55, M * .55, W - M * .55, H - M * .55], outline=T['ink2'] if t
 if orient == 'land':
     bx0, by0, bx1, by1 = int(W * .33), int(H * .08), int(W * (.79 if T['panel'] else .94)), int(H * .92)
 else:
-    bx0, by0, bx1, by1 = int(W * .07), int(H * .215), int(W * .93), int(H * .885)
+    bx0, by0, bx1, by1 = int(W * .07), int(H * .215), int(W * .93), int(H * .872)
 s = min((bx1 - bx0) / iw, (by1 - by0) / ih)
 nw, nh = int(iw * s), int(ih * s)
 top = cv2.resize(isl, (nw, nh), interpolation=cv2.INTER_AREA)
@@ -153,6 +155,14 @@ elif T['emblem'] == 'compass' and orient == 'land':
     fn = F('jost400', U * 1.5)
     for t, (dx, dy) in zip('NESW', ((0, -1), (1, 0), (0, 1), (-1, 0))):
         d.text((ex + dx * R * 1.35, ey + dy * R * 1.35), t, font=fn, fill=ink, anchor='mm')
+# optional personal line (same place and size as the designer preview)
+msg = os.environ.get('MSG', '').strip()
+if msg:
+    sz = U * (2.4 if orient == 'land' else 2.6); mw = W * (.25 if orient == 'land' else .8)
+    fm = F('corm500i', sz)
+    while fm.getlength(msg) > mw and sz > 10: sz -= 2; fm = F('corm500i', sz)
+    if orient == 'land': d.text((W * .085, H * .33), msg, font=fm, fill=ink2, anchor='ls')
+    else: d.text((W / 2, H * .905), msg, font=fm, fill=ink2, anchor='ms')
 # brand mark, tiny
 d.text((W / 2, H - M * .55 - U * .9), 'PARTEE PRINTS', font=F('jost400', U * 1.0), fill=ink2, anchor='ms')
 canvas.save(out, quality=93)
