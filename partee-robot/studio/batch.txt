@@ -1,6 +1,8 @@
 # Only the lines below run. Older entries are kept commented out so a push never re-runs them.
+# 23 Nov: Arklow traced from the 2022 satellite (no OSM course data); hole order from the club map, scorecard and Golf Monthly review
+arklow:render
 # 23 Nov: Tara Glen shown as its 9 holes (club map: 9 greens, each played twice)
-tara-glen:render
+# tara-glen:render
 # 23 Nov: Kilrea routing fix (1/10 to green), bog heath
 # kilrea:render
 # 23 Nov 07:55: Baltray fairways from satellite cross-sections (OSM fairways were whole dune corridors + farm fields)
