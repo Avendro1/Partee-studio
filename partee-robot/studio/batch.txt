@@ -1,6 +1,8 @@
 # Only the lines below run. Older entries are kept commented out so a push never re-runs them.
-# 23 Nov 11:10: Strandhill redraw as links (retrace had dropped the links flag)
+# 23 Nov 07:40: Strandhill: no trees or gorse on the photo, crowns removed
 strandhill:render
+# 23 Nov 11:10: Strandhill redraw as links (retrace had dropped the links flag)
+# strandhill:render
 # 23 Nov 10:45: links courses: OSM "wood" areas (dune scrub mapped as forest) dropped; trees come from photo crowns only
 # european:render
 # baltray:render
