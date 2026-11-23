@@ -1,9 +1,9 @@
 #!/bin/bash
 # Signature previews for one course: stamper island (ALPHA) -> premium.py in 3 colourways -> webp for the site.
-K=$1; R=$(cd "$(dirname "$0")/../../.." && pwd); O=$R/out/sig; mkdir -p $O /tmp/sig
+K=$1; export GATE_REPLAY=1; R=$(cd "$(dirname "$0")/../../.." && pwd); O=$R/out/sig; mkdir -p $O /tmp/sig
 cd /tmp/claude-0/osm/stamp
 python3 course_input.py $R/partee-site/courses/$K.json /tmp/sig/$K-in.json || exit 1
-ALPHA=1 NUMS=0 LIFT=0 python3 stamper.py /tmp/sig/$K-in.json /tmp/sig/$K.jpg ${PPM:-2.0} || ALPHA=1 NUMS=0 LIFT=0 python3 stamper.py /tmp/sig/$K-in.json /tmp/sig/$K.jpg 1.4 || exit 1
+ALPHA=1 NUMS=0 LIFT=0 python3 stamper.py /tmp/sig/$K-in.json /tmp/sig/$K.jpg ${PPM:-1.3} || ALPHA=1 NUMS=0 LIFT=0 python3 stamper.py /tmp/sig/$K-in.json /tmp/sig/$K.jpg 1.1 || exit 1
 for T in ivory charcoal navy; do
   python3 $R/partee-robot/studio/sig/premium.py /tmp/sig/$K-island.png $R/partee-site/courses/$K.json $T /tmp/sig/$K-$T.jpg > /tmp/sig/$K-$T.txt || exit 1
   python3 -c "

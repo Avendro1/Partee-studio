@@ -1,5 +1,5 @@
 # stamper.py : fast 2D "studio" renderer. course-style JSON (local metres) -> print image.
-import json, math, sys, time, glob, numpy as np
+import json, math, os, sys, time, glob, numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 from scipy import ndimage as ndi
 from shapely.geometry import LineString, Polygon, Point
@@ -208,7 +208,7 @@ for p in polys.get('parking', []):
             fill(cm2, cc); fill(cm2 * (np.abs(wy - row) < .8), cc * .55 + .1, .8); fill(cm2 * (np.abs(wy - row) < .7) * (wx < xc), np.array([1, 1, 1.]), .12)
   crop_off()
 # buildings: drop shadow, two-tone roof (gable), parapet line
-for b in polys.get('building', []):
+for b in [g_ for b0_ in polys.get('building', []) for g_ in getattr(b0_, 'geoms', [b0_]) if g_.geom_type == 'Polygon']:   # a self-touching footprint can come back as a MultiPolygon (Carnalea 12 crashed)
   if not crop_on(b.bounds, 8): continue
   if True:
     bm_ = mask([b]); mul(blur(np.clip(shift(bm_, 3.5, 3.5) - bm_, 0, 1), .6), .55)
@@ -247,7 +247,7 @@ if 'elev' in d:
     hs = np.clip((shade - flat) * 1.4, -.3, .25) * (1 - wb * .9)
     img[:] = img * (1 + hs[..., None])
 # --- trees: AO on grass, shadows, sprites
-sys.path.insert(0, '/tmp/claude-0/osm/stamp'); import trees2d; LIB = trees2d.library()
+sys.path[:0] = ['/tmp/claude-0/osm/stamp', os.path.dirname(os.path.abspath(__file__))]; import trees2d; LIB = trees2d.library()
 def conifer(seed, S=384):
     r = np.random.default_rng(seed); yy_, xx_ = np.mgrid[0:S, 0:S] - S / 2 + .5; rr = np.hypot(xx_, yy_) / (S * .37); th = np.arctan2(yy_, xx_)
     n = r.integers(22, 30); spike = .82 + .18 * np.abs(np.sin(n / 2 * th + r.uniform(0, 6))) ** .6 + .05 * np.sin(5 * th + r.uniform(0, 6))
@@ -292,7 +292,9 @@ import os
 if os.environ.get('NUMS') == '1' and len(LINES) > 1:
     from PIL import ImageFont
     ov = Image.new('RGBA', (W, H), (0, 0, 0, 0)); od = ImageDraw.Draw(ov); rpx = max(9, int(5.5 * PPM))
-    fnt = ImageFont.truetype('/home/user/avendro-web-v2/partee-robot/fonts/jost500.ttf', int(rpx * 1.15))
+    if os.environ.get('REF_PPM'): R_ = float(os.environ['REF_PPM']); rpx = int(round(max(9, int(5.5 * R_)) * PPM / R_))   # print run: numbers keep their preview size
+    _fp = '/home/user/avendro-web-v2/partee-robot/fonts/jost500.ttf'; _fp = _fp if os.path.exists(_fp) else os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'fonts', 'jost500.ttf')
+    fnt = ImageFont.truetype(_fp, int(rpx * 1.15))
     for h in d['holes']:
         if len(h['pts']) < 2: continue
         (ax, ay), (bx, by) = h['pts'][0], h['pts'][1]; Ln = math.hypot(bx - ax, by - ay) or 1

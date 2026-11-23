@@ -23,12 +23,30 @@ def gate(feats, sat, water_no=(), water_yes=()):
         rep.append(s)
         if s['keep']: out.append([k, c])
     return out, {'water': rep, 'kept': sum(r['keep'] for r in rep), 'dropped': sum(not r['keep'] for r in rep)}
+# Stored decisions (23 Nov): the order robot has no satellite photo, but its print must match the preview the buyer saw,
+# so every run that HAS the photo saves what it kept to gate/<key>.json, and runs without the photo replay that file.
+GD = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gate')
+def _stored(d):
+    import json
+    for p in ((os.path.join(GD, d['key'] + '.json'),) if os.environ.get('GATE_REPLAY') else (f"/tmp/claude-0/osm/gate/{d['key']}.json", os.path.join(GD, d['key'] + '.json'))):
+        if os.path.exists(p): return json.load(open(p))
+def _save(d, **kv):
+    import json
+    p = f"/tmp/claude-0/osm/gate/{d['key']}.json"
+    try:
+        os.makedirs(os.path.dirname(p), exist_ok=True); o = json.load(open(p)) if os.path.exists(p) else {}
+        o.update(kv); json.dump(o, open(p, 'w'))
+    except OSError: pass
 def gate_course(d):
     """filter d['feats'] water using the course's cached tracing photo; writes the report next to the photo"""
     from shapely.geometry import LineString; from shapely.ops import unary_union; import json
     z = unary_union([LineString(h['pts']).buffer(110) for h in d['holes'] if len(h['pts']) > 1]).bounds
     sat = {'path': f"/tmp/claude-0/osm/sat/{d['key']}-0.3.png", 'x0': z[0], 'y1': z[3], 'mpp': .3}
+    if (not os.path.exists(sat['path']) or os.environ.get('GATE_REPLAY')) and _stored(d) and 'water' in _stored(d):   # replay the photo run's decision
+        keep = [Point(p) for p in _stored(d)['water']]
+        return [[k, c] for k, c in d['feats'] if k != 'water' or any(Polygon(np.array(c).reshape(-1, 2)).buffer(0).representative_point().distance(q) < .2 for q in keep)]
     f, rep = gate(d['feats'], sat, d.get('water_no', []), d.get('water_yes', []))
+    if 'water' in rep: _save(d, water=[[r['x'], r['y']] for r in rep['water'] if r['keep']])
     try: json.dump(rep, open(f"/tmp/claude-0/osm/sat/{d['key']}-water.json", 'w'))
     except OSError: pass
     return f
@@ -39,6 +57,8 @@ def crown_gate(d):
     from shapely.geometry import LineString; from shapely.ops import unary_union
     z = unary_union([LineString(h['pts']).buffer(110) for h in d['holes'] if len(h['pts']) > 1]).bounds
     p = f"/tmp/claude-0/osm/sat/{d['key']}-0.3.png"
+    if (not os.path.exists(p) or os.environ.get('GATE_REPLAY')) and d.get('crowns') and _stored(d) and 'crowns' in _stored(d):   # replay the photo run's decision
+        ks = set(_stored(d)['crowns']); return [c for i, c in enumerate(d['crowns']) if i in ks]
     if not os.path.exists(p) or not d.get('crowns'): return d.get('crowns', [])
     im = cv2.imread(p); x0, y1, mpp = z[0], z[3], .3
     g = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY).astype(np.float32); mu = cv2.blur(g, (5, 5)); sd = np.sqrt(np.maximum(cv2.blur(g * g, (5, 5)) - mu * mu, 0))
@@ -50,12 +70,14 @@ def crown_gate(d):
     wm = np.zeros(g.shape, np.uint8)   # 23 Nov: no tree crowns on top of the (already gated) open water
     for k, c in d['feats']:
         if k == 'water': q = np.array(c).reshape(-1, 2); cv2.fillPoly(wm, [np.stack([(q[:, 0] - x0) / mpp, (y1 - q[:, 1]) / mpp], 1).astype(np.int32)], 1)
-    for c in d['crowns']:
+    kept = []
+    for i_, c in enumerate(d['crowns']):
         Xc, Yc = int((c[0] - x0) / mpp), int((y1 - c[1]) / mpp)
         if 0 <= Yc < g.shape[0] and 0 <= Xc < g.shape[1] and wm[Yc, Xc]: continue
         X = (c[0] - x0) / mpp; Y = (y1 - c[1]) / mpp; r = max(2, c[2] * .7 / mpp)
         a, b, e, f = int(max(0, Y - r)), int(min(g.shape[0], Y + r + 1)), int(max(0, X - r)), int(min(g.shape[1], X + r + 1))
         if b <= a or f <= e: continue
         yy, xx = np.mgrid[a:b, e:f]; m = (yy - Y) ** 2 + (xx - X) ** 2 <= r * r
-        if (L[a:b, e:f][m] < gL - 8).mean() >= .3 and np.median(sd[a:b, e:f][m]) >= 3.5: out.append(c)
+        if (L[a:b, e:f][m] < gL - 8).mean() >= .3 and np.median(sd[a:b, e:f][m]) >= 3.5: out.append(c); kept.append(i_)
+    _save(d, crowns=kept)
     return out

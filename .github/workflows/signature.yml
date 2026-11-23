@@ -41,6 +41,7 @@ jobs:
           sudo mkdir -p /home/user /tmp/claude-0/osm/stamp; sudo chmod -R 777 /tmp/claude-0 /home/user
           ln -s $GITHUB_WORKSPACE /home/user/avendro-web-v2
           cp partee-robot/studio/{stamper,trees2d,hole_input,course_input,water_gate}.py /tmp/claude-0/osm/stamp/
+          cp -r partee-robot/studio/gate /tmp/claude-0/osm/stamp/
       - name: Render
         run: |
           for K in ${{ matrix.keys }}; do bash partee-robot/studio/sig/run.sh $K || echo "FAILED $K" | tee -a out/sig-failed.txt; done

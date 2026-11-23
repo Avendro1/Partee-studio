@@ -16,7 +16,7 @@ _sz = [int(v) for v in os.environ.get('SIZE', '3543x4724').split('x')]   # short
 W, H = (max(_sz), min(_sz)) if orient == 'land' else (min(_sz), max(_sz))
 T = dict(
     charcoal=dict(bg=(20, 22, 19), bg2=(30, 33, 28), ink=(201, 169, 106), ink2=(160, 138, 95), wall=(52, 44, 30), grid=None, emblem='shamrock', panel=False),
-    ivory=dict(bg=(241, 234, 219), bg2=(232, 223, 203), ink=(28, 40, 32), ink2=(92, 96, 82), wall=(96, 82, 58), grid=None, emblem='compass', panel=False),
+    ivory=dict(bg=(244, 241, 233), bg2=(236, 232, 221), ink=(28, 40, 32), ink2=(92, 96, 82), wall=(96, 82, 58), grid=None, emblem='compass', panel=False),
     navy=dict(bg=(17, 33, 61), bg2=(23, 42, 76), ink=(214, 190, 140), ink2=(150, 165, 190), wall=(20, 28, 40), grid=(40, 62, 100), emblem='shamrock', panel=True),
 )[theme]
 # ---------- background: soft vignette + fine grain (+ blueprint grid)
