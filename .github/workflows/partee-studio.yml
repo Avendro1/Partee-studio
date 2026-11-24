@@ -67,7 +67,7 @@ jobs:
             K=${K%%:*}
             cp partee-site/courses/$K.json out/courses/ 2>/dev/null || true
             cp /tmp/claude-0/osm/qa/$K.json out/qa/ 2>/dev/null || true
-            mkdir -p out/previews/$K; cp /tmp/claude-0/osm/stamp/$K/*.jpg out/previews/$K/ 2>/dev/null || true; cp /tmp/claude-0/osm/stamp/$K/*.json /tmp/claude-0/osm/stamp/$K/*.png out/previews/$K/ 2>/dev/null || true
+            mkdir -p out/previews/$K; cp /tmp/claude-0/osm/stamp/$K/*.jpg out/previews/$K/ 2>/dev/null || true; cp /tmp/claude-0/osm/stamp/$K/*.json /tmp/claude-0/osm/stamp/$K/all-island.png out/previews/$K/ 2>/dev/null || true
             cp /tmp/claude-0/osm/$K.log out/qa/$K.log 2>/dev/null || true
             mkdir -p out/gate; cp /tmp/claude-0/osm/gate/$K.json out/gate/ 2>/dev/null || true
           done
