@@ -21,6 +21,6 @@ cd $S
 python3 course_input.py $R/partee-site/courses/$K.json $K/all.json
 N=$(python3 -c "import json;print(' '.join(str(h['ref']) for h in json.load(open('$R/partee-site/courses/$K.json'))['holes'] if len(h['pts'])>1))")
 for r in $N; do python3 hole_input.py $R/partee-site/courses/$K.json $r $K/$r.json > /dev/null; done
-NUMS=1 SAT=1 python3 stamper.py $K/all.json $K/all.jpg 1.1 > $K/all.log 2>&1 || echo FAIL all
+ALPHA=1 NUMS=1 SAT=1 python3 stamper.py $K/all.json $K/all.jpg 1.1 > $K/all.log 2>&1 || echo FAIL all
 echo $N | tr ' ' '\n' | xargs -P3 -I{} sh -c "SAT=1 python3 stamper.py $K/{}.json $K/{}.jpg 3 > $K/{}.log 2>&1 || echo FAIL {}"
 echo "total $(( $(date +%s)-T0 )) s"
