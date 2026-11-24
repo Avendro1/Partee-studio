@@ -42,6 +42,9 @@ jobs:
           pip install -q torch torchvision --index-url https://download.pytorch.org/whl/cpu
           pip install -q git+https://github.com/facebookresearch/segment-anything.git
           mkdir -p ~/sam; [ -f ~/sam/sam_vit_b.pth ] || curl -sL -o ~/sam/sam_vit_b.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
+      - name: Extra swap (big links courses with tufts/fine trees ran out of memory)
+        run: |
+          sudo swapoff -a || true; sudo fallocate -l 24G /mnt/swap2 && sudo chmod 600 /mnt/swap2 && sudo mkswap /mnt/swap2 >/dev/null && sudo swapon /mnt/swap2; free -g
       - name: Same paths as the studio machine
         run: |
           sudo mkdir -p /home/user /tmp/claude-0/osm/{sat,teacher,fw,qa,stamp}; sudo chmod -R 777 /tmp/claude-0 /home/user
