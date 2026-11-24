@@ -33,6 +33,9 @@ def smooth_line(pts, it=4):
     return p
 allg = unary_union([p for v in polys.values() for p in v] + [Point(c[0], c[1]).buffer(c[2]) for c in d['crowns']] + [LineString(h_['pts']).buffer(100 if len(d['holes']) == 1 else 70) for h_ in d['holes'] if len(h_['pts']) > 1])   # canvas also covers the island drawn round each hole line, so it is never cut square by the frame
 x0, y0, x1, y1 = allg.buffer(25).bounds
+if d.get('own'):   # the island grows 30 m round this hole's own features (+ edge wobble): widen the canvas there too, or the island is cut flat (K Club Palmer North 8/17)
+    _ob = unary_union([P(['x', c]).buffer(48) for c in d['own']]).bounds
+    x0, y0, x1, y1 = min(x0, _ob[0]), min(y0, _ob[1]), max(x1, _ob[2]), max(y1, _ob[3])
 W, H = int((x1 - x0) * PPM), int((y1 - y0) * PPM)
 def px(x, y): return ((np.asarray(x) - x0) * PPM, (y1 - np.asarray(y)) * PPM)
 def mask(ps, buf=0):
