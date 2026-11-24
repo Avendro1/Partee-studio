@@ -24,6 +24,17 @@ for k_, r_, h_ in (('fairway', 7, 400), ('green', 1.5, 1e9), ('bunker', .4, 1e9)
     if polys.get(k_): polys[k_] = _close(polys[k_], r_, h_)
 if polys.get('fairway'): polys['fairway'] = [q for p in polys['fairway'] for q in getattr(p.buffer(-3, 16).buffer(3, 16), 'geoms', [p.buffer(-3, 16).buffer(3, 16)]) if q.area > 30]   # no steps or notches
 polys['tee'] = [p.buffer(-1.2).buffer(1.2, join_style=1) for p in polys.get('tee', [])]
+_dp = os.environ.get('DET') or os.path.join(os.path.dirname(os.path.abspath(__file__)), 'detail', d.get('key', '') + '.json')   # real OSM paths/single trees (detail.py)
+DET = json.load(open(_dp)) if os.environ.get('DET', '1') != '0' and os.path.exists(_dp) else None
+if DET:   # real single trees mapped in OSM, where the traced crowns have none
+    for tx_, ty_ in DET.get('trees', []):
+        if all(math.hypot(c[0] - tx_, c[1] - ty_) > 4 for c in d['crowns']): d['crowns'].append([tx_, ty_, 3.2, 'round'])
+if DET:   # real OSM footpaths / tracks across the rough (no invented features)
+    _keep = unary_union(polys.get('green', []) + polys.get('tee', []) + polys.get('bunker', []) + polys.get('water', []) + [Point(1e6, 1e6).buffer(1)])
+    for ln in DET['paths']:
+        hw = ln[-1] if isinstance(ln[-1], str) else 'path'; pts = [q for q in ln if not isinstance(q, str)]
+        g = LineString(pts).buffer({'track': 1.2, 'cycleway': 1.0}.get(hw, .75), 8).difference(_keep)
+        polys.setdefault('path', []).extend([q for q in getattr(g, 'geoms', [g]) if q.area > 2])
 def smooth_line(pts, it=4):
     p = np.asarray(pts, float)
     for _ in range(it):
@@ -119,7 +130,7 @@ play = np.clip(fair_m + green_m + tee_m, 0, 1)
 dplay = ndi.distance_transform_edt(play < .5) / PPM
 img[:] = C['rough']; fill(np.clip((dplay - 6) / 25, 0, 1), C['rough_d'], .8)
 if d.get('links'):   # links: deep rough is tan marram / dune grass, mottled, as in the photo (Shane 22 Nov: must look like the satellite)
-    dn = noise(9, 61, 2); dn2 = noise(2.5, 62, 1); dune = np.clip((dplay - 5) / 14, 0, 1) * np.clip(.75 + .35 * dn, 0, 1)
+    dn = noise(9, 61, 2); dn2 = noise(2.5, 62, 1); dune = np.clip((dplay - float(os.environ.get('DUNE0', '1.5'))) / float(os.environ.get('DUNEW', '6')), 0, 1) * np.clip(.75 + .35 * dn, 0, 1)
     fill(dune, hexc('#9C9358'), .85); fill(dune * np.clip(-dn2, 0, 1), hexc('#7E7445'), .6); fill(dune * np.clip(dn2 - .3, 0, 1), hexc('#B3A873'), .5)
 n1, n2, n3 = noise(6, 1), noise(1.2, 2, 2), noise(.25, 3, 1)
 mul(np.ones((H, W)), 1); g_ = np.random.default_rng(33).standard_normal((H, W)).astype(np.float32)
@@ -129,6 +140,17 @@ img *= (1 + .035 * n1 + .035 * n2 + .03 * grain + .02 * grain2)[..., None]
 # heather
 hm = blur(mask(polys.get('heath', [])), .6); hn = noise(.8, 4, 2)
 hm = blur(mask(polys.get('heath', [])), 2.5); fill(hm, C['heath'], .7); tuft = np.clip(noise(.22, 16, 1) - .4, 0, 1); fill(hm * tuft, np.array([.55, .45, .30]), .45); fill(hm * np.clip(hn * .8 + .2, 0, 1), C['heath_d'], .6); fill(hm * np.clip(-hn - .6, 0, 1), C['rough'], .7)
+if os.environ.get('TUFT', '1') == '1' and d.get('links'):   # fine texture of the existing rough: marram tufts in the dune grass, small clumps in the semi
+    _rr = np.random.default_rng(91); _tl = Image.new('RGBA', (W, H), (0, 0, 0, 0)); _td = ImageDraw.Draw(_tl)
+    _area = (dplay > 2.5) & (CAN < .5); ys_, xs_ = np.nonzero(_area[::max(2, int(PPM * 1.5)), ::max(2, int(PPM * 1.5))]); st_ = max(2, int(PPM * 1.5))
+    for yy, xx in zip(ys_ * st_, xs_ * st_):
+        if _rr.random() > .55: continue
+        X = xx + _rr.uniform(-st_, st_); Y = yy + _rr.uniform(-st_, st_); dn_ = min(1, (dplay[min(H - 1, int(Y)), min(W - 1, int(X))] - 2.5) / 10)
+        for k in range(3 if dn_ > .4 else 2):
+            a_ = -2.2 + _rr.normal(0, .35); l_ = PPM * _rr.uniform(.5, 1.1) * (.6 + .6 * dn_)
+            lt = _rr.random() < .5; cc = (196, 186, 132, int(110 * (.4 + .6 * dn_))) if lt else (70, 74, 38, int(120 * (.4 + .6 * dn_)))
+            _td.line([(X, Y), (X + math.cos(a_) * l_, Y + math.sin(a_) * l_)], fill=cc, width=max(1, int(PPM * .16)))
+    _ta = np.asarray(_tl.filter(ImageFilter.GaussianBlur(PPM * .05)), np.float32) / 255; img[:] = img * (1 - _ta[..., 3:]) + _ta[..., :3] * _ta[..., 3:]
 # first cut ring
 semi = blur(mask(polys.get('fairway', []) + polys.get('green', []), 2.4), .07); fill(semi, C['semi'], 1)
 fill(np.clip(blur(mask(polys.get('fairway', []), 6), 2) - semi, 0, 1), C['semi'], .22)
@@ -141,6 +163,17 @@ edge_sh = np.clip(fw - shift(fw, -.9, .9), 0, 1); mul(blur(edge_sh, .4), .86)
 # tees
 tm = blur(tee_m, .08); fill(blur(mask(polys.get('tee', []), .8), .1) - tm * 0, C['semi'], 1); fill(tm, C['fair']); fill(tm * band, C['fair2'], .7)
 mul(blur(np.clip(tm - shift(tm, -.5, .5), 0, 1), .2), .85); mul(blur(np.clip(tm - shift(tm, .5, -.5), 0, 1), .2), 1.08)
+if os.environ.get('TMARK', '1') == '1':   # tee markers: the pair of markers every tee box has
+    _ml = Image.new('RGBA', (W, H), (0, 0, 0, 0)); _md = ImageDraw.Draw(_ml)
+    for p in polys.get('tee', []):
+        if p.area < 25: continue
+        r_ = p.minimum_rotated_rectangle; q = list(r_.exterior.coords)[:4]; e1 = np.subtract(q[1], q[0]); e2 = np.subtract(q[2], q[1])
+        ln_ = e1 if np.hypot(*e1) > np.hypot(*e2) else e2; sh_ = e2 if ln_ is e1 else e1; u = sh_ / (np.hypot(*sh_) + 1e-6); cx_, cy_ = p.centroid.x, p.centroid.y
+        w_ = min(2.2, np.hypot(*sh_) * .3)
+        for sg in (-1, 1):
+            X, Y = px(cx_ + u[0] * w_ * sg, cy_ + u[1] * w_ * sg); r = max(1.2, PPM * .28)
+            _md.ellipse([X - r + PPM * .15, Y - r + PPM * .15, X + r + PPM * .15, Y + r + PPM * .15], fill=(30, 50, 20, 90)); _md.ellipse([X - r, Y - r, X + r, Y + r], fill=(250, 250, 244, 255))
+    _ma = np.asarray(_ml, np.float32) / 255; img[:] = img * (1 - _ma[..., 3:]) + _ma[..., :3] * _ma[..., 3:]
 # green: collar, cross-mow, gentle dome light
 gm = blur(green_m, .04); col = blur(mask(polys.get('green', []), 1.8), .04)
 fill(col, C['collar']); fill(gm, C['green'])
@@ -247,7 +280,7 @@ if 'elev' in d:
     gyz, gxz = np.gradient(Z, 1 / PPM); nz = 1 / np.sqrt(1 + gxz ** 2 + gyz ** 2)
     Ld = np.array([-.55, .55, .63]); Ld /= np.linalg.norm(Ld)           # from NW: world -x, +y  (image row grows south: gy is d/drow)
     shade = (-gxz * Ld[0] + gyz * Ld[1] + Ld[2]) * nz; flat = Ld[2]
-    hs = np.clip((shade - flat) * 1.4, -.3, .25) * (1 - wb * .9)
+    hs = np.clip((shade - flat) * float(os.environ.get('RELIEF', '2.4' if d.get('links') else '1.4')), -.35, .3) * (1 - wb * .9)
     img[:] = img * (1 + hs[..., None])
 # --- trees: AO on grass, shadows, sprites
 sys.path[:0] = ['/tmp/claude-0/osm/stamp', os.path.dirname(os.path.abspath(__file__))]; import trees2d; LIB = trees2d.library()

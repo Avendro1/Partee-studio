@@ -49,6 +49,7 @@ jobs:
           ln -s ~/sam/sam_vit_b.pth /tmp/claude-0/sam_vit_b.pth
           mkdir -p /tmp/claude-0/samenv/bin; ln -s $(which python3) /tmp/claude-0/samenv/bin/python
           cp partee-robot/studio/{stamper,trees2d,hole_input,course_input,water_gate}.py /tmp/claude-0/osm/stamp/
+          cp -r partee-robot/studio/detail /tmp/claude-0/osm/stamp/ 2>/dev/null || true
       - name: Trace, QA, render
         run: |
           for K in ${{ matrix.keys }}; do
