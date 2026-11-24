@@ -283,7 +283,7 @@ if 'elev' in d:
     hs = np.clip((shade - flat) * float(os.environ.get('RELIEF', '2.4' if d.get('links') else '1.4')), -.35, .3) * (1 - wb * .9)
     img[:] = img * (1 + hs[..., None])
 # --- trees: AO on grass, shadows, sprites
-sys.path[:0] = ['/tmp/claude-0/osm/stamp', os.path.dirname(os.path.abspath(__file__))]; import trees2d; LIB = trees2d.library()
+sys.path[:0] = ['/tmp/claude-0/osm/stamp', os.path.dirname(os.path.abspath(__file__))]; import trees2d; LIB = trees2d.library(fine=os.environ.get('TREES', 'fine') == 'fine')
 def conifer(seed, S=384):
     r = np.random.default_rng(seed); yy_, xx_ = np.mgrid[0:S, 0:S] - S / 2 + .5; rr = np.hypot(xx_, yy_) / (S * .37); th = np.arctan2(yy_, xx_)
     n = r.integers(22, 30); spike = .82 + .18 * np.abs(np.sin(n / 2 * th + r.uniform(0, 6))) ** .6 + .05 * np.sin(5 * th + r.uniform(0, 6))
@@ -301,7 +301,7 @@ for c in cr:
     gy_, gx_ = np.mgrid[sl]; tm_[sl] = np.maximum(tm_[sl], np.clip(1.15 - np.hypot(gx_ - X, gy_ - Y) / R, 0, 1))
     g_ = len(c) > 3 and c[3] == 'gorse'; o = R * (.35 if g_ else 1.05); shd[sl] = np.maximum(shd[sl], np.clip(1.1 - np.hypot(gx_ - X - o, gy_ - Y - o) / (R * .98), 0, 1) * (.45 if g_ else 1))
 mul(blur(tm_, 4) * 1.4, .88)                     # ambient occlusion under canopy edges
-mul(blur(shd, .6) * (1 - tm_ * .0), .62)          # cast shadows
+mul(blur(shd, .6) * (1 - tm_ * .0), .70 if os.environ.get('TREES', 'fine') == 'fine' else .62)          # cast shadows
 dens = blur((tm_ > .05).astype(np.float32), 2.5); floor = blur(np.clip((dens - .45) * 2.5, 0, 1), 1)
 fill(floor, hexc('#3A5226'), .35)
 for i, c in enumerate(cr):
@@ -311,6 +311,7 @@ for i, c in enumerate(cr):
     a = np.asarray(im, np.float32) / 255; X, Y = px(c[0], c[1]); ox, oy = int(X - S / 2), int(Y - S / 2)
     ys, xs = slice(max(0, oy), min(H, oy + S)), slice(max(0, ox), min(W, ox + S)); a = a[ys.start - oy:ys.stop - oy, xs.start - ox:xs.stop - ox]
     jit = np.array([rng.uniform(.95, 1.1), rng.uniform(.97, 1.1), rng.uniform(.9, 1.05)]) * rng.uniform(1.02, 1.2)
+    if os.environ.get('TREES', 'fine') == 'fine': jit = jit / 1.11 * rng.uniform(.9, 1.02)   # no bright 'lit dome' on every crown
     al = a[..., 3:4]; img[ys, xs] = img[ys, xs] * (1 - al) + np.clip(a[..., :3] * jit, 0, 1) * al
     TA[ys, xs] = np.maximum(TA[ys, xs], a[..., 3])
 # flag
@@ -384,6 +385,15 @@ if os.environ.get('LIFT', '1') == '1':   # style A (Shane 22 Nov): the course si
     paper_ = ((1 - _sh(S_ * .012, S_ * .018, .30)) * (1 - _sh(S_ * .003, S_ * .004, .25)))[..., None]
     rg = np.random.default_rng(7); gr = cv2.GaussianBlur(rg.normal(0, 1, (H, W)).astype(np.float32), (0, 0), max(.8, PPM * .35)) * .012
     paper_ = paper_ * (1 + gr[..., None])
+if os.environ.get('GRADE', 'ink') == 'ink':   # Shane 24 Nov: darker muted 'printed ink' greens on the product (was lime/cartoony). GRADE=bright = old look
+    import cv2 as _cv
+    _h = _cv.cvtColor(np.clip(img, 0, 1).astype(np.float32), _cv.COLOR_RGB2HSV)   # H 0-360, S/V 0-1
+    _g = _cv.GaussianBlur(((_h[..., 0] > 50) & (_h[..., 0] < 160) & (_h[..., 1] > .2)).astype(np.float32), (0, 0), max(.5, PPM * .3)) * float(os.environ.get('INKS', '1'))
+    _h2 = np.stack([.6 * _h[..., 0] + .4 * 84, .68 * _h[..., 1], (.12 + .8 * _h[..., 2]) ** 1.12], -1)
+    _hh = _h * (1 - _g[..., None]) + _h2 * _g[..., None]
+    _w = _cv.GaussianBlur(((_h[..., 0] > 170) & (_h[..., 0] < 230)).astype(np.float32), (0, 0), max(.5, PPM * .3))   # water: same muted ink family, no bright pool blue
+    _hh[..., 1] *= 1 - .3 * _w; _hh[..., 2] = _hh[..., 2] * (1 - .08 * _w)
+    img[:] = _cv.cvtColor(_hh.astype(np.float32), _cv.COLOR_HSV2RGB)
 outimg = C['paper'][None, None] * paper_ * (1 - isl[..., None]) + img * isl[..., None]
 outimg *= (1 + isl[..., None] * (.006 * noise(.12, 41, 1))[..., None])
 outimg = outimg[max(0, ys.min() - M_):ys.max() + M_, max(0, xs.min() - M_):xs.max() + M_]
