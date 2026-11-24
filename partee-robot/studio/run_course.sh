@@ -5,6 +5,12 @@ mkdir -p /tmp/claude-0/osm/teacher /tmp/claude-0/osm/qa $S/$K
 cp $R/partee-site/courses/$K.json /tmp/claude-0/osm/$K.before-studio.json
 T0=$(date +%s)
 cd $R/partee-robot/tools
+if [ "$MODE" = sig ]; then   # KEY:sig = Signature island only: no numbers, no lift, replayed gate decisions, PPM 2
+cd /tmp/claude-0/osm/stamp; mkdir -p $K
+GATE_REPLAY=1 python3 course_input.py $R/partee-site/courses/$K.json $K/all.json
+GATE_REPLAY=1 ALPHA=1 NUMS=0 LIFT=0 python3 stamper.py $K/all.json $K/all.jpg 2.0 > $K/all.log 2>&1 || echo FAIL sig
+echo "total $(( $(date +%s)-T0 )) s"; exit 0
+fi
 if [ "$MODE" = render ]; then   # KEY:render = already traced, just redraw the prints with the current studio code
 PHOTO_ONLY=1 $PY photo_fix.py $K | tail -1
 else
