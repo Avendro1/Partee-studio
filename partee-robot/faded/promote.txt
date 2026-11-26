@@ -1,2 +1,8 @@
-# scarke-par-3 full-size re-render
-scarke-par-3
+# batch 10: maps fbd7462 routing/par fixes + Deerpark title
+deer-park
+druids-glen
+portstewart-strand
+ballybunion
+rosapenna
+lahinch-old
+deerpark
