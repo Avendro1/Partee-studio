@@ -1,9 +1,9 @@
 # Merge all faded-N artifacts of one run into a single artifact (one download instead of 153).
 name: collect
 on:
+  push:
+    paths: ['.github/workflows/collect.yml']
   workflow_dispatch:
-    inputs:
-      run_id: { required: true }
 permissions:
   contents: read
   actions: read
@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v4
-        with: { run-id: '${{ inputs.run_id }}', github-token: '${{ github.token }}', pattern: 'faded-*', merge-multiple: true, path: out }
+        with: { run-id: '45733939150', github-token: '${{ github.token }}', pattern: 'faded-*', merge-multiple: true, path: out }
       - name: Web-size copies only (jpg), drop heavy inputs
         run: |
           cd out; find . -name '*.jpg' | wc -l; du -sh .
