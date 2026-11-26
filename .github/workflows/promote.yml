@@ -1,0 +1,53 @@
+# Newly redrawn courses (from the maps thread) -> faded previews in 4 styles + every hole. Start: edit partee-robot/faded/promote.txt and push.
+name: promote
+on:
+  push:
+    paths: ['partee-robot/faded/promote.txt']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      keys: ${{ steps.s.outputs.keys }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: partee-robot/faded/promote.txt }
+      - id: s
+        run: python3 -c "import json; k=[l.strip() for l in open('partee-robot/faded/promote.txt') if l.strip() and not l.startswith('#')]; print('keys='+json.dumps(k))" >> $GITHUB_OUTPUT
+  run:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        key: ${{ fromJson(needs.plan.outputs.keys) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -q numpy scipy shapely pillow opencv-python-headless scikit-image
+      - run: |
+          sudo swapoff -a || true; sudo fallocate -l 16G /mnt/swap2 && sudo chmod 600 /mnt/swap2 && sudo mkswap /mnt/swap2 >/dev/null && sudo swapon /mnt/swap2
+          sudo mkdir -p /tmp/claude-0/osm/stamp /tmp/claude-0/osm/gate /tmp/claude-0/osm/sat; sudo chmod -R 777 /tmp/claude-0
+      - name: Render
+        run: |
+          bash partee-robot/faded/promote.sh ${{ matrix.key }} /tmp/pr
+          python3 - <<'P'
+          import glob, os; from PIL import Image
+          O = '/tmp/pr'; os.makedirs(O + '/web/f', exist_ok=True); os.makedirs(O + '/web/fh', exist_ok=True)
+          for p in glob.glob(O + '/f/*.jpg'):
+              im = Image.open(p).convert('RGB'); w, h = im.size; b = os.path.basename(p)[:-4]
+              im.resize((1500, 1500 * h // w) if w > h else (1500 * w // h, 1500), Image.LANCZOS).save(f'{O}/web/f/{b}.webp', quality=86, method=5)
+              im.resize((600, 600 * h // w) if w > h else (600 * w // h, 600), Image.LANCZOS).save(f'{O}/web/f/{b}-s.webp', quality=84, method=5)
+              im.save(f'{O}/web/f/{b}.jpg', quality=90)
+          for p in glob.glob(O + '/fh/*.jpg'): Image.open(p).convert('RGB').save(O + '/web/fh/' + os.path.basename(p)[:-4] + '.webp', quality=78, method=5)
+          for p in glob.glob(O + '/fh/*.json'): os.replace(p, O + '/web/fh/' + os.path.basename(p))
+          os.system(f'cp -r {O}/inputs {O}/web/')
+          print(len(glob.glob(O + '/web/f/*.webp')), 'whole', len(glob.glob(O + '/web/fh/*.webp')), 'holes')
+          P
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: 'pr-${{ matrix.key }}', path: /tmp/pr/web, retention-days: 30 }
