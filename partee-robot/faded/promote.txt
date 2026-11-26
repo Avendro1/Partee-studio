@@ -1,22 +1,4 @@
-# batch 13: 21 second courses (maps 279ce2f)
-ballybunion-cashen
-druids-heath
-fota-island-barryscourt
-portstewart-riverside
-portstewart-old
-rosapenna-sandy-hills
-rosapenna-st-patricks
-county-sligo-bomore
-castlerock-bann
-enniscrone-scurmore
-carne-wild-atlantic-dunes
-rosslare-burrow
-portmarnock-yellow
-deer-park-st-fintans
-carlow-oak-park
-foyle-woodlands
-corrstown-orchard
-donabate-yellow-blue
-malahide-blue-yellow
-royal-tara-cluide-tara
-dun-laoghaire-lower-middle
+# batch 14: fota-island Belvelly, enniscrone Dunes, castlerock update (maps 98ea531)
+fota-island
+enniscrone
+castlerock
