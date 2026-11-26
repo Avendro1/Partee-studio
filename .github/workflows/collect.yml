@@ -2,7 +2,7 @@
 name: collect
 on:
   push:
-    paths: ['.github/workflows/collect.yml']
+    paths: ['.github/workflows/collect.yml']   # rerun 2: + lidar
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,6 +20,6 @@ jobs:
       - name: Web-size copies only (jpg), drop heavy inputs
         run: |
           cd out; find . -name '*.jpg' | wc -l; du -sh .
-          mkdir -p ../web; find . -name '*.jpg' -o -name 'frame.json' -o -name 'ctx.json' | while read f; do mkdir -p ../web/$(dirname $f); cp $f ../web/$f; done; du -sh ../web
+          mkdir -p ../web; find . -name '*.jpg' -o -name 'frame.json' -o -name 'ctx.json' -o -name 'lidar.png' -o -name 'lidar.json' | while read f; do mkdir -p ../web/$(dirname $f); cp $f ../web/$f; done; du -sh ../web
       - uses: actions/upload-artifact@v4
         with: { name: 'faded-all', path: web, retention-days: 14 }
