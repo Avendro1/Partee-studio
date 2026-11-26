@@ -1,0 +1,283 @@
+{
+ "1": {
+  "par": "4",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.36,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.87,
+  "fairway_overlap": 0.68,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "2": {
+  "par": "4",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.48,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.9,
+  "fairway_overlap": 0.56,
+  "green_overlap": 1.0,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": false,
+  "problems": [
+   "fairway shape off"
+  ]
+ },
+ "3": {
+  "par": "4",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.33,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.89,
+  "fairway_overlap": 0.69,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "4": {
+  "par": "3",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.22,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.9,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "5": {
+  "par": "5",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.4,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.91,
+  "fairway_overlap": 0.73,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "6": {
+  "par": "4",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.37,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.88,
+  "fairway_overlap": 0.72,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "7": {
+  "par": "3",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.54,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.86,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "8": {
+  "par": "4",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.39,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.88,
+  "fairway_overlap": 0.6,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "9": {
+  "par": "4",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.29,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.77,
+  "fairway_overlap": 0.67,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [
+   1096
+  ],
+  "pass": false,
+  "problems": [
+   "1 building/car park area(s) missing"
+  ]
+ },
+ "10": {
+  "par": "4",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.17,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.88,
+  "fairway_overlap": 0.69,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [
+   1318
+  ],
+  "pass": false,
+  "problems": [
+   "1 building/car park area(s) missing"
+  ]
+ },
+ "11": {
+  "par": "3",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.01,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.9,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [
+   742
+  ],
+  "pass": false,
+  "problems": [
+   "1 building/car park area(s) missing"
+  ]
+ },
+ "12": {
+  "par": "4",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.2,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.9,
+  "fairway_overlap": 0.74,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "13": {
+  "par": "4",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.33,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.89,
+  "fairway_overlap": 0.6,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "14": {
+  "par": "3",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.33,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.84,
+  "green_overlap": 1.0,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "15": {
+  "par": "4",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.45,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.9,
+  "fairway_overlap": 0.63,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "16": {
+  "par": "5",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.34,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.9,
+  "fairway_overlap": 0.68,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "17": {
+  "par": "3",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.38,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.93,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": true,
+  "problems": []
+ },
+ "18": {
+  "par": "5",
+  "bunkers_made_up": [],
+  "bunkers_missing": [],
+  "bunker_overlap": 0.42,
+  "water_ours_is_water": null,
+  "water_missing": [],
+  "trees_overlap": 0.88,
+  "fairway_overlap": 0.59,
+  "green_overlap": 0.99,
+  "lake_islands_missing": [],
+  "buildings_missing": [],
+  "pass": false,
+  "problems": [
+   "fairway shape off"
+  ]
+ }
+}
