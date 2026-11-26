@@ -1,0 +1,20 @@
+# Merge every fh-<course> artifact of one fhole run into one artifact (one download).
+name: collectfh
+on:
+  workflow_dispatch:
+    inputs:
+      run: { description: 'fhole run id', required: true }
+permissions:
+  contents: read
+  actions: read
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    steps:
+      - env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          R=${{ inputs.run }}; gh api --paginate "repos/${{ github.repository }}/actions/runs/$R/artifacts?per_page=100" --jq '.artifacts[].name' > names.txt; wc -l names.txt
+          gh run download $R -R ${{ github.repository }} -D dl $(sed 's/^/-n /' names.txt | tr '\n' ' ')
+          mkdir -p out; for d in dl/*; do cp $d/* out/ 2>/dev/null || true; done; ls out | wc -l; du -sh out
+      - uses: actions/upload-artifact@v4
+        with: { name: 'fh-all', path: out, retention-days: 14, compression-level: 0 }
