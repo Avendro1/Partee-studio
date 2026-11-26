@@ -1,6 +1,5 @@
-youghal
-cobh
-craddockstown
-fortwilliam
-kilkea-castle
-west-waterford-dungarvan
+gold-coast
+banbridge
+dungannon
+celbridge-elm-hall
+larne
