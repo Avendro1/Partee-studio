@@ -1,13 +1,17 @@
-# 26 Nov batch 3 full redraws (maps 69b9126): Cork/Kildare
-athy
-bantry-bay
-blarney-resort
-charleville
-kanturk
-kinsale
-macroom
-mallow
-mitchelstown
-monkstown
-naas
-royal-curragh
+# 26 Nov batch 4 full redraws (maps 7cc3de7): Macreddin + 15
+athenry
+beaufort
+cregmore-park
+dooks
+dunmore-east
+gort
+holywood
+knightsbrook
+macreddin
+oughterard
+parknasilla
+portumna
+royal-belfast
+royal-tara
+tuam
+warrenpoint
