@@ -11,8 +11,12 @@ jobs:
   merge:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
-        with: { run-id: '45733939150', github-token: '${{ github.token }}', pattern: 'faded-*', merge-multiple: true, path: out }
+      - name: Download every faded-N artifact (gh paginates; download-artifact stopped at 100)
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          mkdir -p out; gh api --paginate "repos/${{ github.repository }}/actions/runs/45733939150/artifacts?per_page=100" --jq '.artifacts[].name' > names.txt; wc -l names.txt
+          gh run download 45733939150 -R ${{ github.repository }} -D dl $(sed 's/^/-n /' names.txt | tr '\n' ' ')
+          for d in dl/*; do cp -r $d/* out/ 2>/dev/null || true; done; ls out | wc -l
       - name: Web-size copies only (jpg), drop heavy inputs
         run: |
           cd out; find . -name '*.jpg' | wc -l; du -sh .
