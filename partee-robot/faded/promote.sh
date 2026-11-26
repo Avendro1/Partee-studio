@@ -16,7 +16,7 @@ done
 rm -f $T/surr.png
 LE=""; [ -f $I/lidar.png ] && LE="LIDAR=$I/lidar.png"
 env SIZE=1800x2400 CTX=$I/ctx.json SURRCTX=$I/ctx.json SURR_R=.13 $LE python3 $SIG/plan.py $T/all.json $C $OUT/f/$K-architectural.jpg > $T/plan.log 2>&1 || echo "FAIL plan $K"
-for R in $(python3 -c "import json; print(' '.join(str(h['ref']) for h in json.load(open('$C'))['holes'] if len(h.get('pts',[]))>1))"); do
+for R in $(python3 -c "import json; d=json.load(open('$C')); print('' if d.get('preview') else ' '.join(str(h['ref']) for h in d['holes'] if len(h.get('pts',[]))>1))"); do
   ALL=$T/all.json bash $D/fhole.sh $K $R $OUT/fh 1200x1600 2.5 || ALL=$T/all.json bash $D/fhole.sh $K $R $OUT/fh 1200x1600 2.0 || echo "FAILED $K $R"
 done
 rm -rf $T; echo "promoted $K"

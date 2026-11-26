@@ -12,6 +12,7 @@ from shapely.prepared import prep
 HERE = os.path.dirname(os.path.abspath(__file__)); FD = HERE + '/../../fonts/'
 F = lambda n, s: ImageFont.truetype(FD + n + '.ttf', max(6, int(s)))
 d = json.load(open(sys.argv[1])); c = json.load(open(sys.argv[2])); out = sys.argv[3]
+PV = bool(c.get("preview"))   # satellite preview (26 Nov): holes not routed yet, so no line of play, flags or hole strip
 PAPER = (240, 234, 219); INK = (36, 46, 38); INK2 = (110, 108, 94); RED = (150, 70, 48)
 LANDF = (232, 228, 208); FAIR = (196, 210, 160); GRN = (170, 196, 128); TREEF = (134, 150, 114); WATERF = (196, 210, 206); WATERL = (92, 124, 132); SANDF = (246, 240, 222); SANDD = (150, 130, 96); BLD = (214, 206, 188)
 def polys(g):
@@ -63,7 +64,7 @@ sz = [int(v) for v in os.environ.get('SIZE', '3543x4724').split('x')]
 def _layout(lo):
     W_, H_ = (max(sz), min(sz)) if lo else (min(sz), max(sz)); U_ = min(W_, H_) / 100; MG_ = min(W_, H_) * .075
     ST_ = (H_ * .655, H_ * .855) if lo else (H_ * .655, H_ * .868)
-    if HOLE: ST_ = (H_ * .855, H_ * .855)
+    if HOLE or PV: ST_ = (H_ * .855, H_ * .855)
     return W_, H_, U_, MG_, ST_, W_ - 2 * MG_, ST_[0] - U_ * 3 - MG_
 # rotate the plan (like architects do) when that lets a long, thin course fill the page; north arrow follows
 best = None; lc = land.centroid
@@ -400,7 +401,7 @@ if LIDAR and os.path.exists(LIDAR):
     im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
 # flags on the real pin positions (inside a green)
 gp = prep(green.buffer(2))
-NOPLAY = HOLE and os.environ.get('NOPLAY') == '1'   # shop single-hole print: the designer/robot draw the customer's own shots + flag on top
+NOPLAY = (HOLE and os.environ.get('NOPLAY') == '1') or PV   # shop single-hole print: the designer/robot draw the customer's own shots + flag on top
 for px_, py_ in ([] if NOPLAY else d.get('pins', [])):
     if not gp.contains(Point(px_, py_)): continue
     X, Y = T(px_, py_); hpole = U * 1.0 * SS
@@ -420,7 +421,7 @@ for h in ([] if NOPLAY else HL):
     dr.ellipse([px - rr, py - rr, px + rr, py + rr], fill=PAPER, outline=RED, width=LW(.08))
     dr.text((px, py + rr * .08), str(h['ref']), font=fn, fill=RED, anchor='mm')
 # ---- 18-hole strip: every hole on its own, tee at the bottom, same scale for all
-order = [] if HOLE else sorted(HL, key=lambda h: int(re.sub(r'\D', '', str(h['ref'])) or 0))
+order = [] if (HOLE or PV) else sorted(HL, key=lambda h: int(re.sub(r'\D', '', str(h['ref'])) or 0))
 n = len(order); rows = 1 if land_o else 2; per = max(1, math.ceil(n / rows))
 cellw = (W - 2 * MG) / per; cellh = (STRIP[1] - STRIP[0]) / rows
 segs = []
@@ -477,7 +478,7 @@ a = np.asarray(im, np.float32); rng = np.random.default_rng(3)
 g = cv2.GaussianBlur(rng.normal(0, 1, (H, W)).astype(np.float32), (0, 0), 1.0) * 2.4 + cv2.GaussianBlur(rng.normal(0, 1, (H, W)).astype(np.float32), (0, 0), 7) * 1.8
 im = Image.fromarray(np.clip(a + g[..., None], 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
 # hairline under the strip label area + type block
-if not HOLE: dr.line([(MG, STRIP[0] - U * 1.4), (W - MG, STRIP[0] - U * 1.4)], fill=INK2, width=max(1, int(U * .06)))
+if not (HOLE or PV): dr.line([(MG, STRIP[0] - U * 1.4), (W - MG, STRIP[0] - U * 1.4)], fill=INK2, width=max(1, int(U * .06)))
 name = c['name']; m = re.search(r'\s+(Golf (Club|Course|Links|Resort|Centre)|Golf (&|and) \w+ Club)', name)
 title = (name[:m.start()] if m else name.split(' - ')[0].split(',')[0]).replace(' (Old Course)', '').strip()
 def spw(t, f, tr): return sum(f.getlength(ch) for ch in t) + tr * (len(t) - 1)

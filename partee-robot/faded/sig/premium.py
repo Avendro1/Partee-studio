@@ -250,9 +250,9 @@ else:
     if orient == 'land':
         lim = W * .33 - U * 2 - W * .085                                  # left column, clear of the course box (starts at .33 W)
         if not T['panel']:
-            draw_sp(W * .085, H * .86, f'{holes} HOLES', fsm, ink, U * .45)
+            if not c.get('preview'): draw_sp(W * .085, H * .86, f'{holes} HOLES', fsm, ink, U * .45)   # satellite preview: holes not routed yet, so no count
             ls_, fl, tr_ = fit_lines(place, 'jost500', U * 1.9, U * .45, lim, U * 1.3)
-            for i, t in enumerate(ls_): draw_sp(W * .085, H * .86 + U * 3.6 * (i + 1), t, fl, ink2, tr_)
+            for i, t in enumerate(ls_): draw_sp(W * .085, H * .86 + U * 3.6 * (i + (0 if c.get('preview') else 1)), t, fl, ink2, tr_)
         elif ', ' in place:                                               # navy: town under the title column, county in the panel
             ls_, fl, tr_ = fit_lines(place.rsplit(', ', 1)[0], 'jost500', U * 1.9, U * .45, lim, U * 1.3)
             for i, t in enumerate(ls_): draw_sp(W * .085, H * .86 + U * 3.6 * i, t, fl, ink2, tr_)
@@ -272,7 +272,7 @@ else:
         for i, t in enumerate(pl):
             draw_sp(pcx, py0 + (py1 - py0) * (.72 + i * .09), t, F('jost500', sz), ink, U * .45 * sz / (U * 1.7), 'm')
     else:
-        t = f'{holes} HOLES   |   {place}'; sz = U * 1.9
+        t = place if c.get('preview') else f'{holes} HOLES   |   {place}'; sz = U * 1.9
         while sz > U * 1.3 and spaced(t, F('jost500', sz), U * .45 * sz / (U * 1.9)) > W * .84: sz -= 1
         draw_sp(W / 2, H * .93, t, F('jost500', sz), ink, U * .45 * sz / (U * 1.9), 'm')
     # emblem

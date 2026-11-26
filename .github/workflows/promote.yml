@@ -22,6 +22,7 @@ jobs:
     timeout-minutes: 300
     strategy:
       fail-fast: false
+      max-parallel: 12
       matrix:
         key: ${{ fromJson(needs.plan.outputs.keys) }}
     steps:
