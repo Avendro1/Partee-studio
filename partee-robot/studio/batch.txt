@@ -1,8 +1,2 @@
-delgany
-greystones
-wicklow
-bray
-woodenbridge
-baltinglass
-rathsallagh
-roundwood
+powerscourt
+powerscourt-west
