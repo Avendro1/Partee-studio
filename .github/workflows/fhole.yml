@@ -1,0 +1,57 @@
+# Single-hole prints in the 4 faded styles (26 Nov 2026), one job per course. Start: edit partee-robot/faded/fhole.txt and push.
+name: fhole
+on:
+  push:
+    paths: ['partee-robot/faded/fhole.txt']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      keys: ${{ steps.s.outputs.keys }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: partee-robot/faded/fhole.txt }
+      - id: s
+        run: |
+          python3 -c "import json; k=[l.strip() for l in open('partee-robot/faded/fhole.txt') if l.strip() and not l.startswith('#')]; print('keys='+json.dumps(k))" >> $GITHUB_OUTPUT
+  run:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        key: ${{ fromJson(needs.plan.outputs.keys) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Install
+        run: pip install -q numpy scipy shapely pillow opencv-python-headless scikit-image
+      - name: Extra swap
+        run: |
+          sudo swapoff -a || true; sudo fallocate -l 16G /mnt/swap2 && sudo chmod 600 /mnt/swap2 && sudo mkswap /mnt/swap2 >/dev/null && sudo swapon /mnt/swap2; free -g
+      - name: Paths
+        run: |
+          sudo mkdir -p /tmp/claude-0/osm/stamp /tmp/claude-0/osm/gate /tmp/claude-0/osm/sat; sudo chmod -R 777 /tmp/claude-0
+      - name: Render every hole
+        run: |
+          K=${{ matrix.key }}; F=partee-robot/faded; O=/tmp/fh; mkdir -p $O/web
+          (cd $F && GATE_REPLAY=1 python3 course_input.py courses/$K.json /tmp/all-$K.json > /dev/null)
+          for R in $(python3 -c "import json; print(' '.join(str(h['ref']) for h in json.load(open('$F/courses/$K.json'))['holes'] if len(h.get('pts',[]))>1))"); do
+            ALL=/tmp/all-$K.json bash $F/fhole.sh $K $R $O 1200x1600 2.5 || ALL=/tmp/all-$K.json bash $F/fhole.sh $K $R $O 1200x1600 2.0 || echo "FAILED $K $R"
+          done
+          python3 - $O <<'P'
+          import sys, glob, os; from PIL import Image
+          O = sys.argv[1]
+          for p in glob.glob(O + '/*.jpg'):
+              Image.open(p).convert('RGB').save(O + '/web/' + os.path.basename(p)[:-4] + '.webp', quality=78, method=5)
+          for p in glob.glob(O + '/*.json'): os.replace(p, O + '/web/' + os.path.basename(p))
+          print(len(glob.glob(O + '/web/*.webp')), 'webp')
+          P
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: 'fh-${{ matrix.key }}', path: /tmp/fh/web, retention-days: 30 }
