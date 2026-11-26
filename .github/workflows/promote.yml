@@ -41,8 +41,8 @@ jobs:
           O = '/tmp/pr'; os.makedirs(O + '/web/f', exist_ok=True); os.makedirs(O + '/web/fh', exist_ok=True)
           for p in glob.glob(O + '/f/*.jpg'):
               im = Image.open(p).convert('RGB'); w, h = im.size; b = os.path.basename(p)[:-4]
-              im.resize((1500, 1500 * h // w) if w > h else (1500 * w // h, 1500), Image.LANCZOS).save(f'{O}/web/f/{b}.webp', quality=86, method=5)
-              im.resize((600, 600 * h // w) if w > h else (600 * w // h, 600), Image.LANCZOS).save(f'{O}/web/f/{b}-s.webp', quality=84, method=5)
+              im.save(f'{O}/web/f/{b}.webp', quality=86, method=5)
+              im.resize((1200, 1200 * h // w) if w > h else (1200 * w // h, 1200), Image.LANCZOS).save(f'{O}/web/f/{b}-s.webp', quality=84, method=5)
               im.save(f'{O}/web/f/{b}.jpg', quality=90)
           for p in glob.glob(O + '/fh/*.jpg'): Image.open(p).convert('RGB').save(O + '/web/fh/' + os.path.basename(p)[:-4] + '.webp', quality=78, method=5)
           for p in glob.glob(O + '/fh/*.json'): os.replace(p, O + '/web/fh/' + os.path.basename(p))
