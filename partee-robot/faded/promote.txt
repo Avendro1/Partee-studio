@@ -1,11 +1,19 @@
-# 26 Nov batch 1 full redraws (maps 489f214): Wicklow
-delgany
-greystones
-wicklow
-bray
-woodenbridge
-baltinglass
-rathsallagh
-roundwood
-powerscourt
-powerscourt-west
+# 26 Nov batch 2 full redraws (maps 0e008cd): Dublin
+balcarrick
+beaverstown
+beech-park
+castleknock-and-country
+corrstown
+donabate
+dun-laoghaire
+hollywood-lakes
+howth
+killiney
+lucan
+luttrellstown
+malahide
+old-conna
+roganstown-and-country
+skerries
+swords-open
+westmanstown
