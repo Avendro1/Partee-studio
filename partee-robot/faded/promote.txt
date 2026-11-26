@@ -1,30 +1,5 @@
-# batch 11: 29 preview redraws (maps 3d99140)
-abbeyleix
-ardminnan
-at-roe-valley
-ballyheigue-castle
-belturbet
-black-bush
-bright
-brown-trout-inn
-castlecomer
-cliftonville
-clogher-valley
-cloverhill
-concra-wood
-curra-west
-dunmore-demesne
-glengarriff
-julianstown-and-pitch-putt
-kilkeel
-killerig
-loughrea
-mount-temple
-mountain-view
-redcastle-hotel
-rockmount
-rossmore
-strokestown
-summerhill
-swinford
-templemore
+# batch 12: lahinch-castle (new), castlerock Mussenden, rosslare Old, carne Hackett (maps 62f1efc)
+lahinch-castle
+castlerock
+rosslare
+carne
