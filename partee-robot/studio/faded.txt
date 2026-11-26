@@ -1,2 +1,2 @@
-# 26 Nov: rerun Wexford only (ivory/charcoal/midnight failed in run 45733939150); full list in git history
+# 26 Nov: rerun Wexford only (ctx_fetch2 linemerge fix)
 wexford

@@ -60,7 +60,7 @@ for mem, t in REL:
     o = o.intersection(bx)
     if not o.is_empty: out[k].append(o)
 if coast:   # sea = pieces of the frame on the RIGHT of the coastline's direction (OSM: land on the left)
-    cl = linemerge(unary_union(coast)).intersection(bx); pieces = list(polygonize(unary_union([cl, bx.exterior])))
+    _u = unary_union(coast); cl = (linemerge(_u) if _u.geom_type == "MultiLineString" else _u).intersection(bx); pieces = list(polygonize(unary_union([cl, bx.exterior])))
     for pc in pieces:
         v = 0; pb = pc.exterior.buffer(3)
         for ln in getattr(cl, 'geoms', [cl]):
