@@ -1,15 +1,19 @@
-# 26 Nov batch 5 full redraws (maps 9d12dac)
-waterford
-adare-manor
-virginia
-cobh
-craddockstown
-fortwilliam
-kilkea-castle
-west-waterford-dungarvan
-youghal
-banbridge
-celbridge-elm-hall
-dungannon
-gold-coast
-larne
+# 26 Nov batch 6 full redraws (maps 896ef5e)
+aberdelghy
+ballykisteen
+crossgar
+faughan-valley
+foyle
+gracehill
+greenisland
+heath
+helen-s-bay
+lisburn
+mountrath
+nenagh
+ormeau
+portlaoise
+rathdowney
+roscrea
+slievenamon
+whitehead
