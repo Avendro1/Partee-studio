@@ -1,19 +1,13 @@
-# 26 Nov batch 2 full redraws (maps 0e008cd): Dublin
-balcarrick
-beaverstown
-beech-park
-castleknock-and-country
-corrstown
-donabate
-dun-laoghaire
-hollywood-lakes
-howth
-killiney
-lucan
-luttrellstown
-malahide
-old-conna
-roganstown-and-country
-skerries
-swords-open
-westmanstown
+# 26 Nov batch 3 full redraws (maps 69b9126): Cork/Kildare
+athy
+bantry-bay
+blarney-resort
+charleville
+kanturk
+kinsale
+macroom
+mallow
+mitchelstown
+monkstown
+naas
+royal-curragh
