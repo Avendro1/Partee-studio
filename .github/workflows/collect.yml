@@ -1,9 +1,8 @@
-# Merge all faded-N artifacts of one run into a single artifact (one download instead of 153).
+# Merge every pr-<key> artifact of the promote runs listed in partee-robot/faded/collect.txt into one artifact (one download).
 name: collect
 on:
   push:
-    paths: ['.github/workflows/collect.yml']   # rerun 2: + lidar
-  workflow_dispatch:
+    paths: ['partee-robot/faded/collect.txt']
 permissions:
   contents: read
   actions: read
@@ -11,15 +10,15 @@ jobs:
   merge:
     runs-on: ubuntu-latest
     steps:
-      - name: Download every faded-N artifact (gh paginates; download-artifact stopped at 100)
-        env: { GH_TOKEN: '${{ github.token }}' }
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: partee-robot/faded/collect.txt }
+      - env: { GH_TOKEN: '${{ github.token }}' }
         run: |
-          mkdir -p out; gh api --paginate "repos/${{ github.repository }}/actions/runs/45733939150/artifacts?per_page=100" --jq '.artifacts[].name' > names.txt; wc -l names.txt
-          gh run download 45733939150 -R ${{ github.repository }} -D dl $(sed 's/^/-n /' names.txt | tr '\n' ' ')
-          for d in dl/*; do cp -r $d/* out/ 2>/dev/null || true; done; ls out | wc -l
-      - name: Web-size copies only (jpg), drop heavy inputs
-        run: |
-          cd out; find . -name '*.jpg' | wc -l; du -sh .
-          mkdir -p ../web; find . -name '*.jpg' -o -name 'frame.json' -o -name 'ctx.json' -o -name 'lidar.png' -o -name 'lidar.json' | while read f; do mkdir -p ../web/$(dirname $f); cp $f ../web/$f; done; du -sh ../web
+          mkdir -p out
+          for R in $(grep -v '^#' partee-robot/faded/collect.txt); do
+            gh api --paginate "repos/${{ github.repository }}/actions/runs/$R/artifacts?per_page=100" --jq '.artifacts[].name' > names.txt; wc -l names.txt
+            for n in $(cat names.txt); do gh run download $R -R ${{ github.repository }} -D dl/$n -n $n && cp -r dl/$n/. out/; done
+          done
+          ls out/f | wc -l; ls out/fh | wc -l; du -sh out
       - uses: actions/upload-artifact@v4
-        with: { name: 'faded-all', path: web, retention-days: 14 }
+        with: { name: 'collected', path: out, retention-days: 7, compression-level: 0 }
