@@ -1,11 +1,1 @@
-ardminnan
-ballyheigue-castle
-brown-trout-inn
-clogher-valley
-concra-wood
-curra-west
-julianstown-and-pitch-putt
-killerig
-mountain-view
-redcastle-hotel
-summerhill
+lahinch-castle
