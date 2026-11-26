@@ -481,6 +481,7 @@ im = Image.fromarray(np.clip(a + g[..., None], 0, 255).astype(np.uint8)); dr = I
 if not (HOLE or PV): dr.line([(MG, STRIP[0] - U * 1.4), (W - MG, STRIP[0] - U * 1.4)], fill=INK2, width=max(1, int(U * .06)))
 name = c['name']; m = re.search(r'\s+(Golf (Club|Course|Links|Resort|Centre)|Golf (&|and) \w+ Club)', name)
 title = (name[:m.start()] if m else name.split(' - ')[0].split(',')[0]).replace(' (Old Course)', '').strip()
+if c.get('title'): title = c['title']
 def spw(t, f, tr): return sum(f.getlength(ch) for ch in t) + tr * (len(t) - 1)
 def spd(cx_, y, t, f, fill_, tr):
     x = cx_ - spw(t, f, tr) / 2

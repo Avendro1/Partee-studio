@@ -178,6 +178,7 @@ elif ' - ' in name: line1, line2 = [t.strip() for t in name.split(' - ', 1)]
 elif ',' in name:  # e.g. 'Royal Portrush, Dunluce Links' -> title + second line
     line1, line2 = [t.strip() for t in name.split(',', 1)]
 else: line1, line2 = name, 'Golf Club'
+if c.get('title'): line1 = c['title']   # 26 Nov: two courses at one club (Powerscourt East / West) need their own title
 line1 = line1.replace(' (Old Course)', '')
 line1 = re.sub(r'\s*(,|&|\band)\s*$', '', line1.strip())   # 'Tulfarris Hotel and' -> 'Tulfarris Hotel'
 def spaced(t, f, track): return sum(f.getlength(ch) for ch in t) + track * (len(t) - 1)

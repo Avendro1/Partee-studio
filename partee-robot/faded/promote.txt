@@ -1,17 +1,3 @@
-# 26 Nov batch 4 full redraws (maps 7cc3de7): Macreddin + 15
-athenry
-beaufort
-cregmore-park
-dooks
-dunmore-east
-gort
-holywood
-knightsbrook
-macreddin
-oughterard
-parknasilla
-portumna
-royal-belfast
-royal-tara
-tuam
-warrenpoint
+# 26 Nov Powerscourt East/West own titles
+powerscourt
+powerscourt-west
