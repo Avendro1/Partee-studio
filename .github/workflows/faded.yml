@@ -1,0 +1,53 @@
+# Faded-surroundings whole-course previews (25 Nov 2026), all four styles. Start: edit partee-robot/studio/faded.txt and push.
+name: faded
+on:
+  push:
+    paths: ['partee-robot/studio/faded.txt']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.s.outputs.shards }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: s
+        run: |
+          python3 - <<'P' >> $GITHUB_OUTPUT
+          import json
+          keys = [k.strip() for k in open('partee-robot/studio/faded.txt') if k.strip() and not k.startswith('#')]
+          n = min(160, max(1, len(keys)))
+          print('shards=' + json.dumps([' '.join(keys[i::n]) for i in range(n)]))
+          P
+  run:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        keys: ${{ fromJson(needs.plan.outputs.shards) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - name: Install
+        run: pip install -q numpy scipy shapely pillow opencv-python-headless scikit-image
+      - name: Extra swap
+        run: |
+          sudo swapoff -a || true; sudo fallocate -l 24G /mnt/swap2 && sudo chmod 600 /mnt/swap2 && sudo mkswap /mnt/swap2 >/dev/null && sudo swapon /mnt/swap2; free -g
+      - name: Same paths as the studio machine
+        run: |
+          sudo mkdir -p /home/user /tmp/claude-0/osm/{stamp,gate} /tmp/claude-0/faded; sudo chmod -R 777 /tmp/claude-0 /home/user
+          ln -s $GITHUB_WORKSPACE /home/user/avendro-web-v2
+          cp partee-robot/studio/{stamper,trees2d,hole_input,course_input,water_gate}.py /tmp/claude-0/osm/stamp/
+          cp -r partee-robot/studio/detail /tmp/claude-0/osm/stamp/ 2>/dev/null || true
+          cp -r partee-robot/studio/gate /tmp/claude-0/osm/stamp/
+      - name: Render
+        run: |
+          for K in ${{ matrix.keys }}; do bash partee-robot/studio/faded.sh $K || bash -c "PPM=1.7 bash partee-robot/studio/faded.sh $K" || echo "FAILED $K"; done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: 'faded-${{ strategy.job-index }}', path: /tmp/claude-0/faded, retention-days: 30 }
