@@ -1,6 +1,17 @@
-# batch 8: slievenamon fixed redraw + 4 courses without the giant wood polygon
-slievenamon
-blackwater
-balheary-par-3
-quinagh-house-par-3
-borris
+# batch 9 full redraws (maps 1d6d758)
+dungarvan
+mannan-castle
+ashfield
+ballymoney
+bellewstown
+carrick-on-suir
+castlereagh-hills
+colin-valley
+east-clare
+hogs-head
+kilrush
+newtownstewart
+mayobridge
+montgomerie
+o-meara
+ballinteskin-par-3
