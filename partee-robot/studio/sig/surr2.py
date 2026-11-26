@@ -24,10 +24,6 @@ PAPER_ = np.array([float(v) for v in os.environ.get('SURR_PAPER', '244,241,233')
 # sinking into the paper further out, so land and sea feather out together like Druids Glen. No saturated blue on any style.
 if DARK_: SEA0 = PAPER_ * .22 + np.array((100, 116, 114), np.float32) * .78; SEA1 = PAPER_ * .80 + np.array((60, 76, 80), np.float32) * .20
 else: SEA0 = np.array((150, 168, 170), np.float32); SEA1 = PAPER_ * .55 + np.array((150, 168, 170), np.float32) * .45   # stamper water / deep water after the ink grade
-H3 = os.environ.get('HALO') == '3'
-if H3:   # 26 Nov: the sea reads as SEA in every style (Old Head lost it): muted sea blue-green near the shore, deeper offshore, no glow over the water
-    if DARK_: SEA0 = np.array((58, 86, 92), np.float32); SEA1 = np.array((34, 54, 66), np.float32)
-    else: SEA0 = np.array((156, 184, 184), np.float32); SEA1 = np.array((118, 150, 162), np.float32)
 BEACH = BEACH * .55 + ROUGH * .45 if DARK_ else BEACH * .75 + ROUGH * .25   # strand muted toward the land tone, never a glowing band
 MARSH = ROUGH * np.array((.92, 1.0, .95)); TIDAL = ROUGH * .45 + SEA0 * .35 + SAND * .20   # salt marsh / mud flats: grey-green like the photo
 TREE = np.median(irgb[ia & (L < 75)], 0) if (ia & (L < 75)).sum() > 500 else ROUGH * .5
@@ -57,7 +53,7 @@ din = cv2.GaussianBlur(cv2.distanceTransform((sea > .5).astype(np.uint8), cv2.DI
 deep = np.clip(din / (90 * PPM), 0, 1) ** .7
 put(sea, SEA0[None, None] * (1 - deep[..., None]) + SEA1[None, None] * deep[..., None])
 put(wat, SEA0)
-if DARK_ and not H3:   # shore glow (25 Nov, Old Head read as a cut-out): sea near the land picks up a soft land-tinted wash that dies away slowly
+if DARK_:   # shore glow (25 Nov, Old Head read as a cut-out): sea near the land picks up a soft land-tinted wash that dies away slowly
     _g = np.exp(-din / (R * .45))[..., None] * sea[..., None]
     _shore = ROUGH.astype(np.float32) * .55 + SEA0 * .45
     rgb[:] = rgb * (1 - _g * .75) + _shore * _g * .75
@@ -103,7 +99,7 @@ _c = cv2.resize(_c, (W, H), interpolation=cv2.INTER_LINEAR); Ac = np.maximum((A 
 dist = cv2.distanceTransform((Ac < 1).astype(np.uint8), cv2.DIST_L2, 5)
 fa = np.clip(1 - (dist + noise(R * .12, R * .025)) / R, 0, 1); fa = fa ** 1.4
 import os
-if DARK_ and not H3: rgb *= .80   # dark styles: surroundings sit a step darker than the course, like Druids Glen charcoal
+if DARK_: rgb *= .80   # dark styles: surroundings sit a step darker than the course, like Druids Glen charcoal
 if os.environ.get('HALO') == '2':   # best overall: detail readable near the course, lighter + greyer outward, watercolour-bleed edge
     t_ = np.clip(dist / R, 0, 1)[..., None]
     lum_ = rgb.mean(-1, keepdims=True); rgb = rgb * (1 - t_ * .5) + lum_ * t_ * .5            # desaturate outward
@@ -112,20 +108,5 @@ if os.environ.get('HALO') == '2':   # best overall: detail readable near the cou
     fa = np.clip(1 - (dist + bleed * R * .09) / R, 0, 1); fa = np.clip(fa * 1.25, 0, 1) ** 1.2; fa = np.maximum(fa, A)
 if os.environ.get('HALO') == '1':   # tight halo: lighter as it goes out, paper shows round it
     k_ = np.clip(dist / R, 0, 1)[..., None] ** .5 * .8; rgb = rgb * (1 - k_) + np.array((244, 241, 233), np.float32) * k_; fa = fa ** 1.3
-if H3:   # 26 Nov "painted wash" (Shane: the fade read as grey fog): no greying, no colour pull toward a paper tone.
-    # The landscape keeps its own greens and simply thins out like a watercolour wash: detail melts into soft colour further out,
-    # pigment pools in a faint darker tide-line at the wash's edge, and the paper (light or dark) shows through as the wash thins.
-    t_ = np.clip(dist / R, 0, 1)
-    rb_ = cv2.GaussianBlur(rgb, (0, 0), max(2., R * .035)); ks_ = np.clip((t_ - .12) / .55, 0, 1)[..., None] ** 1.2
-    rgb = rgb * (1 - ks_) + rb_ * ks_                                               # roads/buildings melt into colour outward
-    lum_ = rgb.mean(-1, keepdims=True); rgb = lum_ + (rgb - lum_) * (1 + .18 * ks_)     # keep the wash green, never grey
-    gran = noise(R * .012, 1) * .55 + noise(R * .004, 1) * .45                       # fine paper-granulation edge, not smoky clouds
-    lob = noise(R * .09, 1)                                                           # gentle lobes so the edge isn't a ring
-    tt = np.clip((dist + lob * R * .10 + gran * R * .025) / R, 0, 1.2)
-    fa = np.clip(1 - (tt - .30) / .70, 0, 1); fa = fa * fa * (3 - 2 * fa)              # solid to ~30%, smooth thinning to 0
-    if not DARK_:
-        rim = np.exp(-((fa - .10) / .07) ** 2) * (tt < 1.05)                            # watercolour tide-line
-        rgb *= (1 - .10 * rim)[..., None]; fa = np.maximum(fa, rim * .22)
-    fa = np.where(sea > .5, np.maximum(fa, np.clip(1 - (tt - .45) / .60, 0, 1) ** 1.5), fa)   # the sea holds on a little longer so it reads as sea
 fa = np.maximum(fa, A)
 Image.fromarray(np.dstack([np.clip(rgb, 0, 255), fa * 255]).astype(np.uint8)).save(out); print(out, W, H)
