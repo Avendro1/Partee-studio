@@ -106,6 +106,21 @@ if os.environ.get('HALO') == '2':   # best overall: detail readable near the cou
     k_ = t_ ** .7 * .7; rgb = rgb * (1 - k_) + np.array([float(v) for v in os.environ.get('SURR_PAPER', '244,241,233').split(',')], np.float32) * k_   # lighten toward the paper
     bleed = noise(R * .05, 1) * .6 + noise(R * .015, 1) * .4
     fa = np.clip(1 - (dist + bleed * R * .09) / R, 0, 1); fa = np.clip(fa * 1.25, 0, 1) ** 1.2; fa = np.maximum(fa, A)
+if os.environ.get('HALO') == '3':   # 26 Nov: painted wash, not fog. Keep the land's own hue (no grey), tint toward a pale green-ivory,
+    # hold the paint nearly solid then end on an irregular watercolour edge with a faint pigment rim; dark styles sink into their paper
+    PAP = np.array([float(v) for v in os.environ.get('SURR_PAPER', '244,241,233').split(',')], np.float32)
+    t_ = np.clip(dist / R, 0, 1)[..., None]
+    lum_ = rgb.mean(-1, keepdims=True); rgb = rgb * (1 - t_ * .22) + lum_ * t_ * .22          # only a touch of desaturation
+    TINT = ROUGH * .35 + PAP * .65 if not DARK_ else ROUGH * .30 + PAP * .70
+    k_ = np.clip((t_ - .05) / .75, 0, 1) ** .9 * .72; rgb = rgb * (1 - k_) + TINT * k_       # wash toward a pale tint of the land
+    bleed = noise(R * .08, 1) * .6 + noise(R * .025, 1) * .3 + noise(R * .01, 1) * .1
+    e_ = (dist + bleed * R * .09) / (R * .82)                                                          # 0 at course .. 1 at edge
+    fa = np.clip((1 - e_) / .10, 0, 1); fa = fa * fa * (3 - 2 * fa)                            # solid most of the way, short soft end
+    fa = fa * (.62 + .38 * np.clip(1 - e_ / .6, 0, 1) ** 1.5)                                        # a little transparent toward the edge
+    rim = np.exp(-((e_ - .93) / .03) ** 2)[..., None] * (fa[..., None] > .05)
+    rgb = rgb * (1 - rim * (.14 if not DARK_ else -.08))                                       # pigment pools at the edge (lighter on dark)
+    rgb *= (1 + noise(1.2, .025))[..., None]                                                   # paper tooth
+    fa = np.maximum(fa, A)
 if os.environ.get('HALO') == '1':   # tight halo: lighter as it goes out, paper shows round it
     k_ = np.clip(dist / R, 0, 1)[..., None] ** .5 * .8; rgb = rgb * (1 - k_) + np.array((244, 241, 233), np.float32) * k_; fa = fa ** 1.3
 fa = np.maximum(fa, A)
