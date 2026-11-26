@@ -480,20 +480,20 @@ def spw(t, f, tr): return sum(f.getlength(ch) for ch in t) + tr * (len(t) - 1)
 def spd(cx_, y, t, f, fill_, tr):
     x = cx_ - spw(t, f, tr) / 2
     for ch in t: dr.text((x, y), ch, font=f, fill=fill_, anchor='ls'); x += f.getlength(ch) + tr
-ty = H * (.905 if land_o else .91); ft = F('corm500', U * 4.0); tr = U * 1.2
+ty = H * (.905 if land_o else .91); ft = F('corm500', U * 4.2); tr = U * 1.25
 while spw(title.upper(), ft, tr) > W * .62: ft = F('corm500', ft.size * .95); tr *= .95
 if HOLE:
     sub0 = title.upper(); title = f'HOLE {HOLE}'
 spd(W / 2, ty, title.upper(), ft, INK, tr)
 lat, lon = c['lat'], c['lon']
 sub = '  ·  '.join([p for p in [(sub0 if HOLE else ''), c.get('place', '').upper().replace(', ', '  ·  '), f"{abs(lat):.4f}° {'N' if lat >= 0 else 'S'}  {abs(lon):.4f}° {'W' if lon < 0 else 'E'}"] if p])
-fs2 = F('jost400', U * 1.2); trs = U * .42
-while spw(sub, fs2, trs) > W * .74: fs2 = F('jost400', fs2.size * .95); trs *= .95
-dr.line([(W / 2 - U * 3, ty + U * 2.2), (W / 2 + U * 3, ty + U * 2.2)], fill=INK2, width=max(1, int(U * .1)))
-spd(W / 2, ty + U * 4.4, sub, fs2, INK2, trs)
+fs2 = F('jost500', U * 1.5); trs = U * .5   # 26 Nov: same type sizes as the other three styles
+while spw(sub, fs2, trs) > W * .80: fs2 = F('jost500', fs2.size * .95); trs *= .95
+dr.line([(W / 2 - U * 3, ty + U * 2.3), (W / 2 + U * 3, ty + U * 2.3)], fill=INK2, width=max(1, int(U * .1)))
+spd(W / 2, ty + U * 4.9, sub, fs2, INK2, trs)
 msg = os.environ.get('MSG', '').strip()
 if msg:
-    z = U * 2.0; fm = F('corm500i', z)
+    z = U * 2.7; fm = F('corm500i', z)
     while fm.getlength(msg) > W * .7 and z > 10: z -= 2; fm = F('corm500i', z)
-    dr.text((W / 2, MG * .6), msg, font=fm, fill=INK2, anchor='ms')
+    dr.text((W / 2, MG * .7), msg, font=fm, fill=INK, anchor='ms')
 im.save(out, quality=94); print(out, im.size, len(crowns), 'trees', step, 'm contours')

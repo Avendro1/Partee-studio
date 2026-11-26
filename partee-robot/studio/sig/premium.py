@@ -16,9 +16,9 @@ GAL = os.environ.get('LAYOUT', 'gallery') == 'gallery'   # 24 Nov 2026 Shane cho
 _sz = [int(v) for v in os.environ.get('SIZE', '3543x4724').split('x')]   # short x long side; default 30 x 40 cm at 300 dpi
 W, H = (max(_sz), min(_sz)) if orient == 'land' else (min(_sz), max(_sz))
 T = dict(
-    charcoal=dict(bg=(20, 22, 19), bg2=(30, 33, 28), ink=(201, 169, 106), ink2=(160, 138, 95), wall=(52, 44, 30), grid=None, emblem='shamrock', panel=False),
+    charcoal=dict(bg=(22, 23, 21), bg2=(31, 32, 29), ink=(218, 186, 122), ink2=(184, 160, 112), wall=(52, 44, 30), grid=None, emblem='shamrock', panel=False),
     ivory=dict(bg=(244, 241, 233), bg2=(236, 232, 221), ink=(28, 40, 32), ink2=(92, 96, 82), wall=(96, 82, 58), grid=None, emblem='compass', panel=False),
-    midnight=dict(bg=(19, 36, 27), bg2=(25, 45, 34), ink=(222, 204, 160), ink2=(160, 158, 132), wall=(10, 20, 15), grid=None, emblem='shamrock', panel=False),
+    midnight=dict(bg=(12, 21, 37), bg2=(19, 31, 52), ink=(230, 216, 182), ink2=(176, 182, 196), wall=(10, 20, 15), grid=None, emblem='shamrock', panel=False),
     navy=dict(bg=(17, 33, 61), bg2=(23, 42, 76), ink=(214, 190, 140), ink2=(150, 165, 190), wall=(20, 28, 40), grid=(40, 62, 100), emblem='shamrock', panel=True),
 )[theme]
 # ---------- background: soft vignette + fine grain (+ blueprint grid)
@@ -62,6 +62,8 @@ while best is None and s > .05:
         if _fits(s, c0x + dx * W, c0y + dy * H): best = (s, int(c0x + dx * W), int(c0y + dy * H)); break
     if best is None: s *= .96
 s, ox, oy = best
+if GAL:   # 26 Nov: the map sits the same distance above the name block on every course
+    while _fits(s, ox, oy + int(U0)): oy += int(U0)
 if os.environ.get('SURR_SHRINK'):   # leave paper round the landscape halo
     _k = float(os.environ['SURR_SHRINK']); _cx, _cy = ox + iw * s / 2, oy + ih * s / 2; s *= _k; ox, oy = int(_cx - iw * s / 2), int(_cy - ih * s / 2)
 nw, nh = int(iw * s), int(ih * s)
@@ -143,7 +145,7 @@ if theme == 'midnight':   # 25 Nov: night recolour of the drawing (same tone cur
     _lab = cv2.cvtColor(np.clip(rgb, 0, 255).astype(np.float32) / 255, cv2.COLOR_RGB2LAB); _L, _a, _b = _lab[..., 0], _lab[..., 1], _lab[..., 2]
     _Lo = 100 * (.10 + .62 * (_L / 100) ** 1.55); _sd = np.clip((_L - 78) / 10, 0, 1) * np.clip((_b - 8) / 10, 0, 1) * np.clip(1 - np.abs(_a) / 14, 0, 1)
     _Lo = _Lo * (1 - _sd) + _L * .9 * _sd
-    rgb = cv2.cvtColor(np.dstack([_Lo, _a * .85, _b * .85 - 4 * (1 - _sd)]).astype(np.float32), cv2.COLOR_LAB2RGB) * 255
+    rgb = cv2.cvtColor(np.dstack([_Lo, _a * .72, _b * .72 - 11 * (1 - _sd)]).astype(np.float32), cv2.COLOR_LAB2RGB) * 255
 light = 1 + (.04 if INK else .10) * (1 - np.hypot((np.arange(nw)[None] - nw * .35) / nw, (np.arange(nh)[:, None] - nh * .3) / nh))
 rgb *= light[..., None]
 if PRINT:   # ink on paper: the paper's grain and tone show through the map, edge softly bleeds like real ink
@@ -191,15 +193,15 @@ if GAL:   # Gallery (Shane picked 24 Nov): one centred, letter-spaced type block
     draw_sp(W / 2, ty, line1.upper(), ft, ink, tr, 'm')
     lat, lon = c['lat'], c['lon']
     sub = '  ·  '.join([p_ for p_ in [c.get('place', '').upper().replace(', ', '  ·  '), f"{abs(lat):.4f}° {'N' if lat >= 0 else 'S'}  {abs(lon):.4f}° {'W' if lon < 0 else 'E'}"] if p_])
-    fs_ = F('jost400', U * 1.25); trs = U * .42
-    while spaced(sub, fs_, trs) > W * .74: fs_ = F('jost400', fs_.size * .95); trs *= .95
+    fs_ = F('jost500', U * 1.5); trs = U * .5
+    while spaced(sub, fs_, trs) > W * .80: fs_ = F('jost500', fs_.size * .95); trs *= .95
     d.line([(W / 2 - U * 3, ty + U * 2.3), (W / 2 + U * 3, ty + U * 2.3)], fill=ink2, width=max(1, int(U * .1)))
-    draw_sp(W / 2, ty + U * 4.6, sub, fs_, ink2, trs, 'm')
+    draw_sp(W / 2, ty + U * 4.9, sub, fs_, ink2, trs, 'm')
     msg = os.environ.get('MSG', '').strip()
     if msg:   # personal line: small italic, centred in the top margin (designer.js renderSig uses the same numbers)
-        sz = U * 2.2; fm = F('corm500i', sz)
+        sz = U * 2.7; fm = F('corm500i', sz)
         while fm.getlength(msg) > W * .7 and sz > 10: sz -= 2; fm = F('corm500i', sz)
-        d.text((W / 2, GTOP * .62), msg, font=fm, fill=ink2, anchor='ms')
+        d.text((W / 2, GTOP * .72), msg, font=fm, fill=ink, anchor='ms')
 else:
     if orient == 'land':
         tx, ty, al = W * .085, H * .17, 'l'
