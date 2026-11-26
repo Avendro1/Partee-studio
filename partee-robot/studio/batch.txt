@@ -1,1 +1,9 @@
-lahinch-castle
+castlerock
+rosslare
+carne
+enniscrone
+deer-park:render
+druids-glen:render
+portstewart-strand:render
+ballybunion:render
+rosapenna:render
