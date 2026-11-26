@@ -1,3 +1,15 @@
-# 26 Nov Powerscourt East/West own titles
-powerscourt
-powerscourt-west
+# 26 Nov batch 5 full redraws (maps 9d12dac)
+waterford
+adare-manor
+virginia
+cobh
+craddockstown
+fortwilliam
+kilkea-castle
+west-waterford-dungarvan
+youghal
+banbridge
+celbridge-elm-hall
+dungannon
+gold-coast
+larne
