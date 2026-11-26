@@ -1,31 +1,6 @@
-# 26 Nov batch 7 full redraws (maps d38732e)
-ashbourne
-balbriggan
+# batch 8: slievenamon fixed redraw + 4 courses without the giant wood polygon
+slievenamon
+blackwater
 balheary-par-3
-balmoral
-carlow
-city-of-belfast
-ennis
-forrest-little
-kilcock
-knock
-limerick
 quinagh-house-par-3
-ardee
-armagh
-ballina
-ballinrobe
 borris
-county-cavan
-craigavon
-dundalk
-esker-hills
-hodson-bay
-kilkenny
-letterkenny
-mullingar
-nuremore-hotel-country
-portsalon
-rathbane
-roscommon
-slieve-russell
