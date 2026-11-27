@@ -1,2 +1,3 @@
-# batch 16: citywest (maps 60c1ba0)
-citywest
+# maps fix 00c0f55: killarney-fishing=Killeen, headfort=Championship
+killarney-fishing
+headfort
