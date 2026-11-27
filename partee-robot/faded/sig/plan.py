@@ -483,13 +483,27 @@ for px_, py_ in ([] if NOPLAY else d.get('pins', [])):
 line(land, (44, 58, 30) if HER else INK, LW(.1 if HER else .14), T)
 # line of play + numbered tee circles (red ink, like an architect's routing)
 fn = F('corm500', U * (1.75 if HER else 1.35) * SS); rr = U * (1.45 if HER else 1.05) * SS
+_mk = {}   # tee marker positions; push apart any that overlap (K Club 11 + 15 tees are 13 m apart, one hid the other)
+for h in ([] if NOPLAY else HL):
+    (ax, ay), (bx, by) = h['pts'][0], h['pts'][1]; Lm = math.hypot(bx - ax, by - ay) or 1
+    _mk[id(h)] = list(T(ax - (bx - ax) / Lm * 16, ay - (by - ay) / Lm * 16))
+for _ in range(60):
+    _mv = False; _ks = list(_mk)
+    for i in range(len(_ks)):
+        for j in range(i + 1, len(_ks)):
+            p1, p2 = _mk[_ks[i]], _mk[_ks[j]]; dx, dy = p2[0] - p1[0], p2[1] - p1[1]; dd = math.hypot(dx, dy)
+            if dd < rr * 2.25:
+                if dd < 1e-3: dx, dy, dd = 1.0, 0.0, 1.0
+                push = (rr * 2.25 - dd) / 2 + .5; ux, uy = dx / dd, dy / dd
+                p1[0] -= ux * push; p1[1] -= uy * push; p2[0] += ux * push; p2[1] += uy * push; _mv = True
+    if not _mv: break
 for h in ([] if NOPLAY else HL):
     pts = [T(*p) for p in h['pts']]
     L = LineString(pts)
     for i in ([] if HER else range(0, int(L.length), int(U * 1.4 * SS))):   # dashed (none on heritage)
         a = L.interpolate(i); b = L.interpolate(min(L.length, i + U * .75 * SS)); dr.line([a.coords[0], b.coords[0]], fill=RED, width=LW(.07))
     (ax, ay), (bx, by) = h['pts'][0], h['pts'][1]; Lm = math.hypot(bx - ax, by - ay) or 1
-    px, py = T(ax - (bx - ax) / Lm * 16, ay - (by - ay) / Lm * 16)
+    px, py = _mk[id(h)]
     if HER:
         dr.ellipse([px - rr + U * .12 * SS, py - rr + U * .16 * SS, px + rr + U * .12 * SS, py + rr + U * .16 * SS], fill=(40, 54, 40))
         dr.ellipse([px - rr, py - rr, px + rr, py + rr], fill=(242, 232, 214), outline=INK, width=LW(.07)); dr.ellipse([px - rr * .82, py - rr * .82, px + rr * .82, py + rr * .82], outline=INK2, width=LW(.03))
