@@ -50,6 +50,16 @@ rip = np.zeros_like(cov)
 for k, g in enumerate((3.2, 6.4)):
     rip = np.maximum(rip, outline([p.buffer(g * Q) for p in water], .55) * (.55 - k * .2))
 cov = np.maximum(cov, rip * mL * (1 - turf))
+# roads, buggy paths, car parks (27 Nov): paper lanes with ink edges; car parks finely ruled with their bays
+if G.get('road') or G.get('park'):
+    rd_ = polys('road') if G.get('road') else []; pk_ = polys('park') if G.get('park') else []
+    mR = mask(rd_ + pk_); cov = cov * (1 - mR)
+    if pk_: cov += mask(pk_) * hatch(0, 2.2 * C, .5 * C) * .25
+    by_ = Image.new('L', (W * S, H * S), 0); byd = ImageDraw.Draw(by_)
+    for ln_ in G.get('bays', []):
+        if len(ln_) > 1: byd.line([(x * S, y * S) for x, y in ln_], fill=255, width=max(1, int(.45 * S * Q)))
+    cov = np.maximum(cov, np.asarray(by_, np.float32) / 255 * .55)
+    cov = np.maximum(cov, outline(rd_, .55) * .85); cov = np.maximum(cov, outline(pk_, .8))
 # buildings (27 Nov): the club's real footprints, engraved: paper roof, the shaded half cross-hatched, ridge + hips, cast shadow to the SE
 if G.get('bld'):
     bl_ = polys('bld'); mBl = mask(bl_); mRd = mask(polys('roofd')) if G.get('roofd') else mBl * 0

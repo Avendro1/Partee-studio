@@ -70,6 +70,9 @@ if os.environ.get('FAC') and os.path.exists(os.environ['FAC']):
             if dd <= 160:
                 _ext.append(p.buffer(12, 8))
                 if dd > 0: a_, b_ = _np_(p, land); _ext.append(LineString([a_, b_]).buffer(16, 8))
+        _fu = unary_union(_fb)
+        for p in FE.get('parking', []):   # the club's car park, next to its buildings
+            if p.distance(_fu) < 60 and p.distance(land) <= 160: _ext.append(p.buffer(8, 8))
         if _ext:
             land = unary_union([land] + _ext).buffer(10, 32).buffer(-10, 32).simplify(.8)
             land = unary_union([Polygon(p.exterior) for p in polys(land) if p.area > 5000])
@@ -370,10 +373,35 @@ hl_ = np.asarray(hl_, np.float32)[..., None] / 255
 a_ = np.asarray(im, np.float32); _hs = (.3 if HER else (.9 if LINKS else .55)); a_ = a_ * (1 - hl_ * _hs) + np.array((54, 70, 44) if LINKS else (84, 80, 56), np.float32) * hl_ * _hs
 im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
 # ---------- main map, v2 (24 Nov, Shane: "go as far as I can ... same vibe")
+# 27 Nov (Shane: "car parks and paths should also be visible"): the club's roads, buggy paths and car parks inside the course, from the traced data
+_noplay = unary_union([g for g in (green, bunk, water) if not g.is_empty])
+ROADS = unary_union([p_ for p_ in FE.get('road', []) + FE.get('path', []) if p_.intersects(land)]).intersection(land.buffer(-1.5)).difference(_noplay)
+PARK = unary_union([p_ for p_ in FE.get('parking', []) if land.buffer(-1).contains(p_.representative_point())]).intersection(land.buffer(-1)).difference(_noplay)
+ROADS = ROADS.difference(PARK)
+RDF, RDL, PKF, PKL, PKB = ((198, 186, 150), (112, 100, 70), (122, 120, 110), (70, 68, 58), (186, 182, 168)) if HER else ((222, 214, 194), (160, 150, 124), (176, 174, 166), (118, 114, 104), (222, 220, 212))
+def park_bays(g):   # white-lined bays, 2.5 m apart across each car park's long axis (only where they read at this scale)
+    out = []
+    if s * 2.5 < 3.5: return out
+    for p in polys(g):
+        if p.area < 150: continue
+        r = list(p.minimum_rotated_rectangle.exterior.coords)[:4]
+        e0 = (r[1][0] - r[0][0], r[1][1] - r[0][1]); e1 = (r[2][0] - r[1][0], r[2][1] - r[1][1])
+        if math.hypot(*e0) < math.hypot(*e1): r = r[1:] + r[:1]; e0, e1 = e1, (-e0[0], -e0[1])
+        l0 = math.hypot(*e0); ux, uy = e0[0] / l0, e0[1] / l0; inner = p.buffer(-1.2)
+        for k_ in range(1, int(l0 / 2.5)):
+            a_ = (r[0][0] + ux * k_ * 2.5, r[0][1] + uy * k_ * 2.5); b_ = (a_[0] + e1[0], a_[1] + e1[1])
+            ln = LineString([a_, b_]).intersection(inner)
+            if not ln.is_empty: out.append(ln)
+    return out
+fill(ROADS, RDF, T); line(ROADS, RDL, LW(.03), T)
+fill(PARK, PKF, T); line(PARK, PKL, LW(.04), T)
+for _l in park_bays(PARK):
+    for _g in (getattr(_l, 'geoms', None) or [_l]):
+        if _g.geom_type == 'LineString': dr.line([T(*q) for q in _g.coords], fill=PKB, width=max(1, LW(.02)))
 paths = unary_union([p_ for p_ in FE.get('path', []) if p_.intersects(near)]).intersection(land.buffer(-2)).difference(unary_union([g for g in (green, bunk, water) if not g.is_empty]))
 fill(paths, (226, 219, 198), T); line(paths, (176, 166, 140), LW(.035), T)
 if LINKS:   # marram tufts: denser, taller and darker on the real dune ridges/slopes (DEM), sparse in the flat rough
-    rng_ = np.random.default_rng(11); rough = prep(land.buffer(-3).difference(playg.buffer(3)))
+    rng_ = np.random.default_rng(11); rough = prep(land.buffer(-3).difference(playg.buffer(3)).difference(ROADS.buffer(1.5)).difference(PARK.buffer(1.5)))
     bx0, by0, bx1, by1 = land.bounds; n_ = int(land.area / 14)
     for x, y in zip(rng_.uniform(bx0, bx1, n_), rng_.uniform(by0, by1, n_)):
         i_ = int((e['y1'] + e['step'] / 2 - y) / _st); j_ = int((x - e['x0'] + e['step'] / 2) / _st)
@@ -536,7 +564,7 @@ for px_, py_ in ([] if NOPLAY else d.get('pins', [])):
     dr.polygon([(X, Y - hpole), (X + U * .55 * SS, Y - hpole + U * .2 * SS), (X, Y - hpole + U * .4 * SS)], fill=RED)
 if os.environ.get('GEODUMP'):   # 27 Nov: course geometry in poster px, for styles drawn from the vectors (estate.py)
     _P = lambda g: [[[(T(*q)[0] / SS, T(*q)[1] / SS) for q in p_.exterior.coords]] + [[(T(*q)[0] / SS, T(*q)[1] / SS) for q in i_.coords] for i_ in p_.interiors] for p_ in polys(g)]
-    json.dump({'W': W, 'H': H, 'px_m': s, **{k: _P(g) for k, g in (('land', land), ('fair', fair), ('green', green), ('tee', tee), ('bunk', bunk), ('water', water), ('woods', woods), ('scrub', _sc), ('bld', bld), ('roofd', roof_parts(bld)[0]))}, 'ridge': [[(T(*q)[0] / SS, T(*q)[1] / SS) for q in _g.coords] for _l in roof_parts(bld)[1] for _g in (getattr(_l, 'geoms', None) or [_l]) if _g.geom_type == 'LineString'],
+    json.dump({'W': W, 'H': H, 'px_m': s, **{k: _P(g) for k, g in (('land', land), ('fair', fair), ('green', green), ('tee', tee), ('bunk', bunk), ('water', water), ('woods', woods), ('scrub', _sc), ('bld', bld), ('roofd', roof_parts(bld)[0]), ('road', ROADS), ('park', PARK))}, 'bays': [[(T(*q)[0] / SS, T(*q)[1] / SS) for q in _g.coords] for _l in park_bays(PARK) for _g in (getattr(_l, 'geoms', None) or [_l]) if _g.geom_type == 'LineString'], 'ridge': [[(T(*q)[0] / SS, T(*q)[1] / SS) for q in _g.coords] for _l in roof_parts(bld)[1] for _g in (getattr(_l, 'geoms', None) or [_l]) if _g.geom_type == 'LineString'],
                'crowns': [(T(x, y)[0] / SS, T(x, y)[1] / SS, r * CK * s) for x, y, r in crowns]}, open(os.environ['GEODUMP'], 'w'))
 line(land, (44, 58, 30) if HER else INK, LW(.1 if HER else .14), T)
 # line of play + numbered tee circles (red ink, like an architect's routing)
