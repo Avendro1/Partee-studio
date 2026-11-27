@@ -15,6 +15,10 @@ d = json.load(open(sys.argv[1])); c = json.load(open(sys.argv[2])); out = sys.ar
 PV = bool(c.get("preview"))   # satellite preview (26 Nov): holes not routed yet, so no line of play, flags or hole strip
 PAPER = (240, 234, 219); INK = (36, 46, 38); INK2 = (110, 108, 94); RED = (150, 70, 48)
 LANDF = (232, 228, 208); FAIR = (196, 210, 160); GRN = (170, 196, 128); TREEF = (134, 150, 114); WATERF = (196, 210, 206); WATERL = (92, 124, 132); SANDF = (246, 240, 222); SANDD = (150, 130, 96); BLD = (214, 206, 188)
+# HERITAGE (27 Nov, Shane: 'get this exact look'): same traced drawing, full daylight colour like a hand-painted estate map:
+# vivid striped fairways, deep shaded tree canopies, blue water, cream hole markers in ink, double-rule border, deep green title.
+HER = os.environ.get('PLAN_STYLE') == 'heritage'
+if HER: PAPER = (238, 224, 206); INK = (41, 59, 29); INK2 = (104, 98, 78); LANDF = (190, 180, 128); FAIR = (134, 150, 62); GRN = (148, 166, 70); TREEF = (66, 84, 40); WATERF = (76, 118, 126); WATERL = (52, 80, 86); SANDF = (232, 220, 192); SANDD = (176, 156, 116); BLD = (226, 214, 196)   # sampled from Shane's reference 27 Nov
 def polys(g):
     for p in getattr(g, 'geoms', [g]):
         if p.geom_type == 'Polygon' and not p.is_empty: yield p
@@ -53,7 +57,8 @@ if HOLE:   # only this hole is drawn: its own fairway/green/tees and the bunkers
     fair, tee, green = _own(fair, 'fairway', 6), _own(tee, 'tee', 25), _own(green, 'green', 15)
     bunk = unary_union([q for q in polys(bunk) if q.distance(hl) < 32 or q.distance(unary_union([fair, green])) < 10])
 LINKS = bool(c.get('links') or c.get('coastal_links') or c.get('no_trees'))
-if LINKS: LANDF = (224, 221, 190); FAIR = (196, 218, 146); GRN = (140, 188, 98)   # links: tawny dune-grass ground, so the course doesn't fade into the paper
+if LINKS and not HER: LANDF = (224, 221, 190); FAIR = (196, 218, 146); GRN = (140, 188, 98)
+if LINKS and HER: LANDF = (198, 196, 146)   # links: tawny dune-grass ground, so the course doesn't fade into the paper
 crowns = [] if c.get('no_trees') else [(x, y, r) for x, y, r, *k in d.get('crowns', []) if (k[0] if k else 'round') != 'gorse']
 gorse = [] if c.get('no_trees') else [(x, y, r) for x, y, r, *k in d.get('crowns', []) if k and k[0] == 'gorse']
 inner = prep(land.buffer(-2)); playg = unary_union([g for g in (fair, green, tee, bunk, water) if not g.is_empty]).buffer(1); pplay = prep(playg)
@@ -176,9 +181,9 @@ if SCX and os.path.exists(SCX):
         for p_ in polys(g.intersection(reach).difference(land)):
             ld.polygon([T(*q) for q in p_.exterior.coords], fill=col, outline=out, width=w)
             for i_ in p_.interiors: ld.polygon([T(*q) for q in i_.coords], fill=PAPER)
-    ld.rectangle([0, 0, im.size[0], im.size[1]], fill=LANDF)
-    fld = PG('field'); lf(fld, (226, 224, 200), INK2, LW(.05))
-    wd = unary_union([PG('wood'), PG('scrub')]); lf(wd, (214, 216, 190))
+    ld.rectangle([0, 0, im.size[0], im.size[1]], fill=(230, 216, 196) if HER else LANDF)
+    fld = PG('field'); lf(fld, (234, 220, 200) if HER else (226, 224, 200), INK2, LW(.05))
+    wd = unary_union([PG('wood'), PG('scrub')]); lf(wd, (214, 208, 178) if HER else (214, 216, 190))
     # engraved trees: little inked crowns scattered through the woods
     for p_ in polys(wd.intersection(reach).difference(land)):
         bx0, by0, bx1, by1 = p_.bounds; n = int(p_.area / 70); pp_ = prep(p_)
@@ -226,7 +231,7 @@ lm = Image.new('L', im.size, 0); fill_l = ImageDraw.Draw(lm)
 for p_ in polys(land): fill_l.polygon([T(*q) for q in p_.exterior.coords], fill=255)
 lm = cv2.GaussianBlur(np.asarray(lm, np.float32) / 255, (0, 0), 2)
 arr = np.asarray(im, np.float32); k_ = ((hsw - .5) * lm)[..., None]
-_hk = .9 if LINKS else .55
+_hk = .3 if HER else (.9 if LINKS else .55)
 arr = np.where(k_ < 0, arr * (1 + k_ * _hk), arr + (255 - arr) * k_ * .25)
 im = Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
 lay = Image.new('L', im.size, 0); ld = ImageDraw.Draw(lay)
@@ -255,7 +260,8 @@ for lev, segs in zip(cs.levels, cs.allsegs):
             if g_.geom_type != 'LineString' or g_.length < 8: continue
             ld.line([T(*q) for q in g_.coords], fill=150 if round(lev) % (step * 5) == 0 else 70, width=LW(.08) if round(lev) % (step * 5) == 0 else LW(.05), joint='curve')
 lay = np.asarray(lay, np.float32)[..., None] / 255
-arr = np.asarray(im, np.float32); arr = arr * (1 - lay * .8) + np.array((132, 118, 92), np.float32) * lay * .8
+_ck = .35 if HER else .8
+arr = np.asarray(im, np.float32); arr = arr * (1 - lay * _ck) + np.array((132, 118, 92), np.float32) * lay * _ck
 im = Image.fromarray(arr.astype(np.uint8)); dr = ImageDraw.Draw(im)
 def draw_all(T_, sx, clipg=None, small=False):
     C = (lambda g: g.intersection(clipg)) if clipg is not None else (lambda g: g)
@@ -305,7 +311,7 @@ for gyv in np.arange(by0, by1, sp):
         val = int(min(255, 60 + 900 * sl * (.55 + .6 * shade)))
         hd.line([T(x, y), T(x + ux * Lh, y + uy * Lh)], fill=val, width=max(1, LW(.03 + min(.05, sl * .12))))
 hl_ = np.asarray(hl_, np.float32)[..., None] / 255
-a_ = np.asarray(im, np.float32); _hs = .9 if LINKS else .55; a_ = a_ * (1 - hl_ * _hs) + np.array((54, 70, 44) if LINKS else (84, 80, 56), np.float32) * hl_ * _hs
+a_ = np.asarray(im, np.float32); _hs = (.3 if HER else (.9 if LINKS else .55)); a_ = a_ * (1 - hl_ * _hs) + np.array((54, 70, 44) if LINKS else (84, 80, 56), np.float32) * hl_ * _hs
 im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
 # ---------- main map, v2 (24 Nov, Shane: "go as far as I can ... same vibe")
 paths = unary_union([p_ for p_ in FE.get('path', []) if p_.intersects(near)]).intersection(land.buffer(-2)).difference(unary_union([g for g in (green, bunk, water) if not g.is_empty]))
@@ -327,12 +333,13 @@ if crowns and not _sc.is_empty: _sc = _sc.difference(unary_union([Point(x, y).bu
 _sc = unary_union([q for q in polys(_sc) if q.area > 20])
 if not _sc.is_empty:
     rng_s = np.random.default_rng(9); bx0, by0, bx1, by1 = _sc.bounds; scp = prep(_sc)
-    n_ = int(_sc.area / 6)
+    n_ = int(_sc.area / (16 if HER else 6))
     pts_ = [(x, y) for x, y in zip(rng_s.uniform(bx0, bx1, n_ * 3), rng_s.uniform(by0, by1, n_ * 3)) if scp.contains(Point(x, y))][:n_]
     for x, y in sorted(pts_, key=lambda t: -t[1]):
-        X, Y = T(x, y); R_ = max(1.2 * SS, rng_s.uniform(1.3, 2.2) * s * SS)
-        k_ = rng_s.integers(3); col = [(98, 112, 74), (110, 122, 80), (88, 102, 68)][k_]
-        dr.ellipse([X - R_, Y - R_, X + R_, Y + R_], fill=col, outline=(62, 74, 50), width=max(1, LW(.025)))
+        X, Y = T(x, y); R_ = max(1.2 * SS, rng_s.uniform(2.4, 3.8) * s * SS) if HER else max(1.2 * SS, rng_s.uniform(1.3, 2.2) * s * SS)
+        k_ = rng_s.integers(3); col = ([(66, 84, 40), (80, 98, 44), (58, 74, 36)] if HER else [(98, 112, 74), (110, 122, 80), (88, 102, 68)])[k_]
+        dr.ellipse([X - R_, Y - R_, X + R_, Y + R_], fill=col, outline=(38, 48, 26) if HER else (62, 74, 50), width=max(1, LW(.025)))
+        if HER: hr = R_ * .5; dr.ellipse([X - R_ * .35 - hr, Y - R_ * .35 - hr, X - R_ * .35 + hr, Y - R_ * .35 + hr], fill=tuple(int(a * .6 + b * .4) for a, b in zip((126, 142, 64), col)))
 # gorse / scrub: dark spiky clumps (real 'gorse' crowns from the trace)
 _gp = prep(land.buffer(-2)); _pl = prep(playg)
 for x, y, r in gorse:
@@ -343,19 +350,25 @@ for x, y, r in gorse:
         a = k * 2 * math.pi / 7; dr.line([(X, Y), (X + math.cos(a) * R_ * 1.25, Y + math.sin(a) * R_ * 1.25)], fill=(62, 70, 46), width=max(1, LW(.025)))
 # trees: soft cast shadow (light from NW), then each real crown shaded with a lit side, three greens for variety
 TG = [(112, 132, 96), (124, 144, 104), (100, 122, 90)]; TL = (168, 182, 136); TO = (64, 82, 60)
+if HER: TG = [(50, 70, 32), (62, 82, 36), (44, 62, 28)]; TL = (150, 160, 74); TO = (28, 38, 20)
 sh = Image.new('L', im.size, 0); sd = ImageDraw.Draw(sh)
+CK = .74 if HER else .62
 for x, y, r in crowns:
-    X, Y = T(x, y); R_ = max(1.5 * SS, r * .62 * s * SS); o_ = R_ * .45
+    X, Y = T(x, y); R_ = max(1.5 * SS, r * CK * s * SS); o_ = R_ * .45
     sd.ellipse([X - R_ + o_, Y - R_ + o_, X + R_ + o_, Y + R_ + o_], fill=255)
 sh = cv2.GaussianBlur(np.asarray(sh, np.float32) / 255, (0, 0), max(1, U * .12 * SS))[..., None]
-a_ = np.asarray(im, np.float32); a_ = a_ * (1 - sh * .22); im = Image.fromarray(a_.astype(np.uint8)); dr = ImageDraw.Draw(im)
+a_ = np.asarray(im, np.float32); a_ = a_ * (1 - sh * (.42 if HER else .22)); im = Image.fromarray(a_.astype(np.uint8)); dr = ImageDraw.Draw(im)
 for x, y, r in sorted(crowns, key=lambda t: -t[1]):
-    X, Y = T(x, y); R_ = max(1.5 * SS, r * .62 * s * SS); k_ = (int(x * 7.3) ^ int(y * 3.1)) % 3
+    X, Y = T(x, y); R_ = max(1.5 * SS, r * CK * s * SS); k_ = (int(x * 7.3) ^ int(y * 3.1)) % 3
     dr.ellipse([X - R_, Y - R_, X + R_, Y + R_], fill=TG[k_], outline=TO, width=max(1, LW(.035)))
     hr = R_ * .55; dr.ellipse([X - R_ * .38 - hr, Y - R_ * .38 - hr, X - R_ * .38 + hr, Y - R_ * .38 + hr], fill=tuple(int(a * .55 + b * .45) for a, b in zip(TL, TG[k_])))
+    if HER: hr2 = R_ * .22; dr.ellipse([X - R_ * .45 - hr2, Y - R_ * .45 - hr2, X - R_ * .45 + hr2, Y - R_ * .45 + hr2], fill=TL)
 # first cut: a slightly lighter band of semi-rough hugging every fairway (real on every course)
-_fc = unary_union([fair, green]).buffer(2.5, 8).difference(unary_union([fair, green, bunk, water]))
-fill(_fc.intersection(land), tuple(min(255, int(v * 1.0 + 18)) for v in LANDF), T)
+_fc = unary_union([fair, green]).buffer(3.5 if HER else 2.5, 8).difference(unary_union([fair, green, bunk, water]))
+if HER:   # first cut: a darker green that melts into the rough (no hard band)
+    _fm2 = cv2.GaussianBlur(mask_of(unary_union([fair, green]).buffer(4.5, 8).intersection(land), T), (0, 0), max(1, U * .45 * SS))[..., None]
+    a_ = np.asarray(im, np.float32); a_ = a_ * (1 - _fm2 * .8) + np.array((100, 116, 46), np.float32) * _fm2 * .8; im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
+else: fill(_fc.intersection(land), tuple(min(255, int(v * 1.0 + 18)) for v in LANDF), T)
 # fairways with mowing stripes along each hole
 fill(fair, FAIR, T); fill(tee, FAIR, T)
 fm = mask_of(unary_union([fair, tee]), T); stripe = np.zeros(fm.shape, np.float32)
@@ -365,21 +378,36 @@ for h in HL:
     zm = mask_of(LineString(h['pts']).buffer(45, 8), T) * fm
     band = np.floor(((xx_ - P0[0]) * nrm[0] + (yy_ - P0[1]) * nrm[1]) / (7 * s * SS)) % 2
     stripe = np.maximum(stripe, zm * band)
-a_ = np.asarray(im, np.float32); a_ = a_ + (255 - a_) * (stripe * .16)[..., None]; im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
-line(fair, INK, LW(.08), T); line(tee, INK, LW(.07), T)
+if HER:   # turf with no hole of its own (practice ground): stripes running north-south
+    _cov = np.zeros(fm.shape, np.float32)
+    for h in HL: _cov = np.maximum(_cov, mask_of(LineString(h['pts']).buffer(45, 8), T))
+    stripe = np.maximum(stripe, fm * (1 - _cov) * (np.floor(xx_ / (7 * s * SS)) % 2))
+a_ = np.asarray(im, np.float32); a_ = a_ + (255 - a_) * (stripe * (.13 if HER else .16))[..., None]; im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
+if HER:   # soft bevel: turf darkens toward its edge and lifts in the middle, so fairways read as raised, mown ground
+    _bl = cv2.GaussianBlur(fm, (0, 0), max(1, U * .55 * SS)); _ed = np.clip(fm - _bl, 0, 1) * 2.2
+    _sh2 = np.clip(np.roll(np.roll(fm, int(U * .25 * SS), 0), int(U * .25 * SS), 1) - fm, 0, 1)   # thin drop shadow to the SE
+    _sh2 = cv2.GaussianBlur(_sh2, (0, 0), max(1, U * .2 * SS))
+    _ce = np.clip(1 - _ed, 0, 1) * cv2.GaussianBlur(fm, (0, 0), max(1, U * 1.2 * SS))   # lighter, yellower centre line of the mown turf
+    a_ = np.asarray(im, np.float32); a_ = a_ * (1 - np.clip(_ed, 0, 1)[..., None] * .2) * (1 - _sh2[..., None] * .35)
+    a_ = a_ + (np.array((196, 204, 112), np.float32) - a_) * (_ce[..., None] * .28)
+    im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
+if HER: line(fair, (92, 110, 44), LW(.05), T); line(tee, (92, 110, 44), LW(.05), T)
+else: line(fair, INK, LW(.08), T); line(tee, INK, LW(.07), T)
 # greens: fill, a lighter collar ring inside, crisp edge
 fill(green, GRN, T)
 gi = green.buffer(-1.2, 8)
-fill(gi, (182, 206, 140), T); line(green, INK, LW(.09), T)
+fill(gi, (158, 176, 78) if HER else (182, 206, 140), T); line(green, (92, 110, 44) if HER else INK, LW(.05 if HER else .09), T)
 # water: fill, waterlines, darker shore edge
-fill(water, WATERF, T); waterlines(water, T, s, LW(.04)); line(water, WATERL, LW(.1), T)
+fill(water, WATERF, T)
+if not HER: waterlines(water, T, s, LW(.04))
+line(water, WATERL, LW(.06 if HER else .1), T)
 # bunkers: sand with fine stipple and a shaded lip on the far (NW-lit) side for depth
 bunk = bunk.buffer(.35, 6)   # hairline grow so small pot bunkers still read at print size (shape unchanged)
-fill(bunk, (251, 248, 238), T); stipple(bunk, T, s, dens=.25 / max(s, .3) * .5, col=(196, 178, 140))
+fill(bunk, (234, 222, 196) if HER else (251, 248, 238), T); stipple(bunk, T, s, dens=.25 / max(s, .3) * .5, col=(196, 178, 140))
 bm = mask_of(bunk, T); sh_ = max(1, int(U * .14 * SS))
 lip = np.clip(bm - np.roll(np.roll(bm, sh_, 0), sh_, 1), 0, 1); lip = cv2.GaussianBlur(lip, (0, 0), sh_ * .6)[..., None] * bm[..., None]
 a_ = np.asarray(im, np.float32); a_ = a_ * (1 - lip * .42); im = Image.fromarray(a_.astype(np.uint8)); dr = ImageDraw.Draw(im)
-line(bunk, (92, 80, 58), LW(.08), T)
+line(bunk, (176, 156, 116) if HER else (92, 80, 58), LW(.05 if HER else .08), T)
 fill(bld, BLD, T); line(bld, INK2, LW(.05), T)
 # LIDAR (24 Nov): real 1-2 m laser relief (GSI/OPW open data, CC BY 4.0) from LIDAR=hillshade.png + .json bbox in local metres.
 # High-pass relief only: every dune ridge, hollow, bunker bowl and mound on the course, engraved in ink; light on the greens, fuller in the rough.
@@ -396,9 +424,37 @@ if LIDAR and os.path.exists(LIDAR):
         k_ = k_ * (1 - cv2.GaussianBlur(mask_of(unary_union([Point(x, y).buffer(r * .62 + 6, 8) for x, y, r in crowns]), T), (0, 0), 3))
     dk = np.clip(-hpw / 40, 0, 1) ** 1.3 * k_; lt = np.clip(hpw / 40, 0, 1) * k_
     a_ = np.asarray(im, np.float32)
-    a_ = a_ * (1 - dk[..., None] * .55) + np.array((60, 74, 50), np.float32) * dk[..., None] * .55
-    a_ = a_ * (1 - lt[..., None] * .35) + np.array((252, 248, 228), np.float32) * lt[..., None] * .35
+    _d1, _l1 = (.16, .08) if HER else (.55, .35)
+    a_ = a_ * (1 - dk[..., None] * _d1) + np.array((60, 74, 50), np.float32) * dk[..., None] * _d1
+    a_ = a_ * (1 - lt[..., None] * _l1) + np.array((252, 248, 228), np.float32) * lt[..., None] * _l1
     im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
+if HER:   # painted finish (27 Nov, Shane: 'more of the painted look'): wobble every edge a little like a brush, smooth into flat washes, add paper/brush texture
+    _a = np.asarray(im); _a0 = _a.astype(np.float32)
+    _h, _w = _a.shape[:2]; _rg = np.random.default_rng(21)
+    def _nz(sig): n = cv2.GaussianBlur(_rg.normal(0, 1, (_h // 4, _w // 4)).astype(np.float32), (0, 0), sig / 4); n = cv2.resize(n / (n.std() + 1e-6), (_w, _h)); return n
+    _amp = U * .22 * SS; _dx = (_nz(U * 1.2 * SS) * .7 + _nz(U * .35 * SS) * .3) * _amp; _dy = (_nz(U * 1.2 * SS) * .7 + _nz(U * .35 * SS) * .3) * _amp
+    _yy, _xx = np.mgrid[0:_h, 0:_w].astype(np.float32)
+    _a = cv2.remap(_a, _xx + _dx, _yy + _dy, cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+    _small = cv2.resize(_a, (_w // 2, _h // 2), interpolation=cv2.INTER_AREA)
+    _small = cv2.edgePreservingFilter(_small, flags=1, sigma_s=5, sigma_r=.12)
+    _p = cv2.resize(_small, (_w, _h), interpolation=cv2.INTER_CUBIC).astype(np.float32) * .55 + _a.astype(np.float32) * .45
+    _wash = (_nz(U * 3 * SS) * .035 + _nz(U * .6 * SS) * .025 + cv2.GaussianBlur(_rg.normal(0, 1, (_h, _w)).astype(np.float32), (0, 0), 1.2) * .02)
+    _lmk = cv2.GaussianBlur(mask_of(land, T), (0, 0), max(1, U * .3 * SS))
+    _p = _p * (1 + (_wash * _lmk)[..., None])
+    _p = np.where(_lmk[..., None] > .01, _p, _a0)   # paper/surroundings untouched by the wobble wash
+    # water with depth: deeper teal in the middle, lighter toward the banks, soft ripple light (27 Nov, Shane: 'water is all a flat blue')
+    _wm = mask_of(water, T); _dw = cv2.distanceTransform((_wm > .5).astype(np.uint8), cv2.DIST_L2, 5)
+    _dp = np.clip(_dw / (U * 2.2 * SS), 0, 1) ** .8
+    _wc = np.array((112, 152, 152), np.float32) * (1 - _dp[..., None]) + np.array((44, 86, 100), np.float32) * _dp[..., None]
+    _rp = (_nz(U * .5 * SS) * .5 + _nz(U * .18 * SS) * .5); _wc = _wc * (1 + _rp[..., None] * .05)
+    _wmb = cv2.GaussianBlur(_wm, (0, 0), max(1, U * .08 * SS))[..., None]
+    _p = _p * (1 - _wmb * .9) + _wc * _wmb * .9
+    _rim = np.clip(_wm - cv2.GaussianBlur(_wm, (0, 0), max(1, U * .25 * SS)), 0, 1)[..., None] * 1.6
+    _p = _p * (1 - np.clip(_rim, 0, 1) * .35)
+    # overall contrast on the course only: gentle S-curve + a touch more saturation
+    _x = _p / 255; _c = _x + (_x - _x * _x) * (_x - .5) * 1.1 * 2 * .55; _g = _c.mean(-1, keepdims=True); _c = _g + (_c - _g) * 1.12
+    _p = _p * (1 - _lmk[..., None]) + np.clip(_c, 0, 1) * 255 * _lmk[..., None]
+    im = Image.fromarray(np.clip(_p, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
 # flags on the real pin positions (inside a green)
 gp = prep(green.buffer(2))
 NOPLAY = (HOLE and os.environ.get('NOPLAY') == '1') or PV   # shop single-hole print: the designer/robot draw the customer's own shots + flag on top
@@ -408,18 +464,23 @@ for px_, py_ in ([] if NOPLAY else d.get('pins', [])):
     dr.ellipse([X - U * .12 * SS, Y - U * .06 * SS, X + U * .12 * SS, Y + U * .06 * SS], fill=(60, 70, 60))
     dr.line([(X, Y), (X, Y - hpole)], fill=INK, width=LW(.06))
     dr.polygon([(X, Y - hpole), (X + U * .55 * SS, Y - hpole + U * .2 * SS), (X, Y - hpole + U * .4 * SS)], fill=RED)
-line(land, INK, LW(.14), T)
+line(land, (44, 58, 30) if HER else INK, LW(.1 if HER else .14), T)
 # line of play + numbered tee circles (red ink, like an architect's routing)
-fn = F('corm500', U * 1.35 * SS); rr = U * 1.05 * SS
+fn = F('corm500', U * (1.75 if HER else 1.35) * SS); rr = U * (1.45 if HER else 1.05) * SS
 for h in ([] if NOPLAY else HL):
     pts = [T(*p) for p in h['pts']]
     L = LineString(pts)
-    for i in range(0, int(L.length), int(U * 1.4 * SS)):   # dashed
+    for i in ([] if HER else range(0, int(L.length), int(U * 1.4 * SS))):   # dashed (none on heritage)
         a = L.interpolate(i); b = L.interpolate(min(L.length, i + U * .75 * SS)); dr.line([a.coords[0], b.coords[0]], fill=RED, width=LW(.07))
     (ax, ay), (bx, by) = h['pts'][0], h['pts'][1]; Lm = math.hypot(bx - ax, by - ay) or 1
     px, py = T(ax - (bx - ax) / Lm * 16, ay - (by - ay) / Lm * 16)
-    dr.ellipse([px - rr, py - rr, px + rr, py + rr], fill=PAPER, outline=RED, width=LW(.08))
-    dr.text((px, py + rr * .08), str(h['ref']), font=fn, fill=RED, anchor='mm')
+    if HER:
+        dr.ellipse([px - rr + U * .12 * SS, py - rr + U * .16 * SS, px + rr + U * .12 * SS, py + rr + U * .16 * SS], fill=(40, 54, 40))
+        dr.ellipse([px - rr, py - rr, px + rr, py + rr], fill=(242, 232, 214), outline=INK, width=LW(.07)); dr.ellipse([px - rr * .82, py - rr * .82, px + rr * .82, py + rr * .82], outline=INK2, width=LW(.03))
+        dr.text((px, py + rr * .08), str(h['ref']), font=fn, fill=INK, anchor='mm')
+    else:
+        dr.ellipse([px - rr, py - rr, px + rr, py + rr], fill=PAPER, outline=RED, width=LW(.08))
+        dr.text((px, py + rr * .08), str(h['ref']), font=fn, fill=RED, anchor='mm')
 # ---- 18-hole strip: every hole on its own, tee at the bottom, same scale for all
 order = [] if (HOLE or PV) else sorted(HL, key=lambda h: int(re.sub(r'\D', '', str(h['ref'])) or 0))
 n = len(order); rows = 1 if land_o else 2; per = max(1, math.ceil(n / rows))
@@ -441,7 +502,7 @@ for i, (h, zone, rot, ang) in enumerate(segs):
     global_saved = (woods, fair, green, tee, bunk, water, bld)
     rz = rot(zone)
     fill(rz.intersection(rot(land)), LANDF, T2)
-    for g, col, oc in ((R(woods), (118, 138, 100), (64, 82, 60)), (R(fair), FAIR, INK), (R(tee), FAIR, INK), (R(green), GRN, INK), (R(water), WATERF, WATERL), (R(bunk.buffer(.35, 6)), (251, 248, 238), (92, 80, 58))):
+    for g, col, oc in ((R(woods), TREEF if HER else (118, 138, 100), TO if HER else (64, 82, 60)), (R(fair), FAIR, INK), (R(tee), FAIR, INK), (R(green), GRN, INK), (R(water), WATERF, WATERL), (R(bunk.buffer(.35, 6)), (251, 248, 238), (92, 80, 58))):
         fill(g, col, T2); line(g, oc, LW(.04), T2)
     if LHP is not None:   # same real LiDAR relief in each hole of the strip
         hp_, lm2 = LHP
@@ -457,7 +518,7 @@ for i, (h, zone, rot, ang) in enumerate(segs):
         im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
         for g, oc in ((R(fair), INK), (R(green), INK), (R(bunk), (92, 80, 58))): line(g, oc, LW(.04), T2)
     rp = rot(LineString(h['pts']))
-    dr.line([T2(*q) for q in rp.coords], fill=RED, width=LW(.05))
+    if not HER: dr.line([T2(*q) for q in rp.coords], fill=RED, width=LW(.05))
     dr.text((ccx * SS, (top + cellh - U * .9) * SS), str(h['ref']), font=fs, fill=INK, anchor='ms')
 # scale bar (real metres) + small north arrow, bottom right of the map area
 _bx1 = W - MG; _by = bot_ - U * .5
@@ -475,7 +536,7 @@ _tx, _ty = _rt(0, -nh - U * 1.1 * SS); dr.text((_tx, _ty), 'N', font=F('corm500'
 im = im.resize((W, H), Image.LANCZOS)
 # paper grain
 a = np.asarray(im, np.float32); rng = np.random.default_rng(3)
-g = cv2.GaussianBlur(rng.normal(0, 1, (H, W)).astype(np.float32), (0, 0), 1.0) * 2.4 + cv2.GaussianBlur(rng.normal(0, 1, (H, W)).astype(np.float32), (0, 0), 7) * 1.8
+g = cv2.GaussianBlur(rng.normal(0, 1, (H, W)).astype(np.float32), (0, 0), 1.0) * (1.6 if HER else 2.4) + cv2.GaussianBlur(rng.normal(0, 1, (H, W)).astype(np.float32), (0, 0), 7) * (0 if HER else 1.8)
 im = Image.fromarray(np.clip(a + g[..., None], 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
 # hairline under the strip label area + type block
 if not (HOLE or PV): dr.line([(MG, STRIP[0] - U * 1.4), (W - MG, STRIP[0] - U * 1.4)], fill=INK2, width=max(1, int(U * .06)))
@@ -486,17 +547,26 @@ def spw(t, f, tr): return sum(f.getlength(ch) for ch in t) + tr * (len(t) - 1)
 def spd(cx_, y, t, f, fill_, tr):
     x = cx_ - spw(t, f, tr) / 2
     for ch in t: dr.text((x, y), ch, font=f, fill=fill_, anchor='ls'); x += f.getlength(ch) + tr
-ty = H * (.905 if land_o else .91); ft = F('corm500', U * 4.0); tr = U * 1.2
+ty = H * (.905 if land_o else (.9 if HER else .91)); ft = F('corm500', U * (4.6 if HER else 4.0)); tr = U * 1.2
 while spw(title.upper(), ft, tr) > W * .62: ft = F('corm500', ft.size * .95); tr *= .95
 if HOLE:
     sub0 = title.upper(); title = f'HOLE {HOLE}'
+if HER:
+    for k_, w_ in ((.42, .09), (.52, .04)): dr.rectangle([MG * k_, MG * k_, W - MG * k_, H - MG * k_], outline=INK2 if k_ > .5 else INK, width=max(1, int(U * w_)))
 spd(W / 2, ty, title.upper(), ft, INK, tr)
 lat, lon = c['lat'], c['lon']
 sub = '  ·  '.join([p for p in [(sub0 if HOLE else ''), (c.get('place', '').upper().split(', ')[-1] if HOLE else c.get('place', '').upper().replace(', ', '  ·  ')), f"{abs(lat):.4f}° {'N' if lat >= 0 else 'S'}  {abs(lon):.4f}° {'W' if lon < 0 else 'E'}"] if p])
 fs2 = F('jost400', U * 1.2); trs = U * .42
 while spw(sub, fs2, trs) > W * .74: fs2 = F('jost400', fs2.size * .95); trs *= .95
-dr.line([(W / 2 - U * 3, ty + U * 2.2), (W / 2 + U * 3, ty + U * 2.2)], fill=INK2, width=max(1, int(U * .1)))
-spd(W / 2, ty + U * 4.4, sub, fs2, INK2, trs)
+if HER and not HOLE:
+    _cy = ty + U * 2.6
+    for sgn in (-1, 1): dr.line([(W / 2 + sgn * U * 2.2, _cy), (W / 2 + sgn * U * 16, _cy)], fill=INK2, width=max(1, int(U * .08)))
+    dr.polygon([(W / 2, _cy - U * .7), (W / 2 + U * .7, _cy), (W / 2, _cy + U * .7), (W / 2 - U * .7, _cy)], outline=INK, fill=PAPER, width=max(1, int(U * .1)))
+    _pl = c.get('place', '').upper(); _pl = _pl if 'IRELAND' in _pl else _pl + ', IRELAND'; _co = f"{abs(lat):.4f}° {'N' if lat >= 0 else 'S'}    {abs(lon):.4f}° {'W' if lon < 0 else 'E'}"
+    spd(W / 2, ty + U * 5.4, _pl, fs2, INK, trs); spd(W / 2, ty + U * 7.4, _co, F('jost400', U * 1.05), INK2, trs * .8)
+else:
+    dr.line([(W / 2 - U * 3, ty + U * 2.2), (W / 2 + U * 3, ty + U * 2.2)], fill=INK2, width=max(1, int(U * .1)))
+    spd(W / 2, ty + U * 4.4, sub, fs2, INK2, trs)
 msg = os.environ.get('MSG', '').strip()
 if msg:
     z = U * 2.0; fm = F('corm500i', z)
