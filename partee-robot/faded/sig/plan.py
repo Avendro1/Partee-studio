@@ -12,6 +12,9 @@ from shapely.prepared import prep
 HERE = os.path.dirname(os.path.abspath(__file__)); FD = HERE + '/../../fonts/'
 F = lambda n, s: ImageFont.truetype(FD + n + '.ttf', max(6, int(s)))
 d = json.load(open(sys.argv[1])); c = json.load(open(sys.argv[2])); out = sys.argv[3]
+if os.environ.get("TREEFIX"):   # 27 Nov: per-course tree fixes checked on the satellite (fixtrees.py): add island copses, drop reed 'crowns' on lake banks
+    _tf = json.load(open(os.environ["TREEFIX"])); _dr = set(_tf.get("drop", []))
+    d["crowns"] = [q for i, q in enumerate(d.get("crowns", [])) if i not in _dr] + _tf.get("add", [])
 if os.environ.get("EXTRA_CROWNS"):
     from scipy.spatial import cKDTree as _KD
     _ex = json.load(open(os.environ["EXTRA_CROWNS"])); _cr = d.get("crowns", [])
@@ -62,6 +65,7 @@ if HOLE:   # only this hole is drawn: its own fairway/green/tees and the bunkers
     fair, tee, green = _own(fair, 'fairway', 6), _own(tee, 'tee', 25), _own(green, 'green', 15)
     bunk = unary_union([q for q in polys(bunk) if q.distance(hl) < 32 or q.distance(unary_union([fair, green])) < 10])
 LINKS = bool(c.get('links') or c.get('coastal_links') or c.get('no_trees'))
+if os.environ.get('TREEFIX') and _tf.get('islands'): water = water.difference(unary_union([Polygon(q).buffer(1.5) for q in _tf['islands']]))   # wooded islands are land, not lake
 if LINKS and not HER: LANDF = (224, 221, 190); FAIR = (196, 218, 146); GRN = (140, 188, 98)
 if LINKS and HER: LANDF = (198, 196, 146)   # links: tawny dune-grass ground, so the course doesn't fade into the paper
 crowns = [] if c.get('no_trees') else [(x, y, r) for x, y, r, *k in d.get('crowns', []) if (k[0] if k else 'round') != 'gorse']
@@ -406,6 +410,13 @@ fill(gi, (138, 156, 66) if HER else (182, 206, 140), T); line(green, (92, 110, 4
 fill(water, WATERF, T)
 if not HER: waterlines(water, T, s, LW(.04))
 line(water, WATERL, LW(.06 if HER else .1), T)
+if os.environ.get('TREEFIX') and _tf.get('islands'):   # the lake fill paints its island holes with ground colour: put the island trees back on top
+    _ip = prep(unary_union([Polygon(q) for q in _tf['islands']]).buffer(2))
+    for x, y, r in sorted([q for q in crowns if _ip.contains(Point(q[0], q[1]))], key=lambda t: -t[1]):
+        X, Y = T(x, y); R_ = max(1.5 * SS, r * CK * s * SS); k_ = (int(x * 7.3) ^ int(y * 3.1)) % 3; o_ = R_ * .3
+        dr.ellipse([X - R_ + o_, Y - R_ + o_, X + R_ + o_, Y + R_ + o_], fill=tuple(int(v * .62) for v in LANDF))
+        dr.ellipse([X - R_, Y - R_, X + R_, Y + R_], fill=TG[k_], outline=TO, width=max(1, LW(.035)))
+        hr = R_ * .55; dr.ellipse([X - R_ * .38 - hr, Y - R_ * .38 - hr, X - R_ * .38 + hr, Y - R_ * .38 + hr], fill=tuple(int(a * .45 + b * .55) for a, b in zip(TL, TG[k_])) if HER else tuple(int(a * .55 + b * .45) for a, b in zip(TL, TG[k_])))
 # bunkers: sand with fine stipple and a shaded lip on the far (NW-lit) side for depth
 bunk = bunk.buffer(.35, 6)   # hairline grow so small pot bunkers still read at print size (shape unchanged)
 fill(bunk, (234, 222, 196) if HER else (251, 248, 238), T); stipple(bunk, T, s, dens=.25 / max(s, .3) * .5, col=(196, 178, 140))
