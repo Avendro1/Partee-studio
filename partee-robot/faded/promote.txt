@@ -1,5 +1,2 @@
-# batch 15: Ballyliffin Old + Glashedy, Clandeboye Dufferin + Ava (maps e3a2dd9)
-ballyliffin-old
-ballyliffin-glashedy
-clandeboye-dufferin
-clandeboye-ava
+# batch 16: citywest (maps 1d1c6d4)
+citywest
