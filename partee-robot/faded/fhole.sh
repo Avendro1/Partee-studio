@@ -1,5 +1,5 @@
 #!/bin/bash
-# fhole.sh KEY REF OUTDIR [SIZE] [PPM] : one hole in the 4 faded styles (same recipe as the whole-course faded.sh, 25 Nov approved look).
+# fhole.sh KEY REF OUTDIR [SIZE] [PPM] : one hole in the faded styles (27 Nov shop: architectural, heritage, estate) (same recipe as the whole-course faded.sh, 25 Nov approved look).
 # island has no flag: the designer + robot draw flag and shots on top using OUTDIR/KEY-REF-STYLE.t.json (island px -> poster px) and KEY-REF.geo.json (world -> island px)
 set -o pipefail; K=$1; REF=$2; O=$3; SIZE=${4:-1800x2400}; PPM=${5:-3.0}; D=$(cd $(dirname $0); pwd); SIG=$D/sig
 I=${INPUTS:-$D/inputs}/$K; C=$D/courses/$K.json; T=$O/tmp-$K-$REF; mkdir -p $T; cd $D
@@ -28,15 +28,19 @@ for st in "ivory 244,241,233 detailed" "charcoal 34,37,32 charcoal" "midnight 70
 done
 rm -f $T/surr.png
 LE=""; [ -f ${LIDAR:-$I/lidar.png} ] && LE="LIDAR=${LIDAR:-$I/lidar.png}"
-case " $ST " in *" architectural "*) env HOLE=$REF NOPLAY=1 SIZE=$SIZE CTX=$I/ctx.json SURRCTX=$I/ctx.json SURR_R=.13 $LE TDUMP=$O/$K-$REF-architectural.t.json MSG="$MSG" python3 $SIG/plan.py $T/all.json $C $O/$K-$REF-architectural.jpg > $T/plan.log 2>&1 || { echo "FAIL plan $K $REF"; tail -3 $T/plan.log; };; esac
+TF=$D/heritage/$K-treefix.json; TE=""; [ -f $TF ] && TE="TREEFIX=$TF"   # 27 Nov: same satellite tree check as the site previews
+case " $ST " in *" heritage "*) env PLAN_STYLE=heritage $TE HOLE=$REF NOPLAY=1 SIZE=$SIZE CTX=$I/ctx.json SURRCTX=$I/ctx.json SURR_R=.13 $LE TDUMP=$O/$K-$REF-heritage.t.json MSG="$MSG" python3 $SIG/plan.py $T/all.json $C $O/$K-$REF-heritage.jpg > $T/plan.log 2>&1 || { echo "FAIL heritage $K $REF"; tail -3 $T/plan.log; };; esac
+case " $ST " in *" estate "*) env PLAN_STYLE=heritage STRIP_Z=55 $TE HOLE=$REF NOPLAY=1 SIZE=$SIZE CTX=$I/ctx.json SURRCTX=$I/ctx.json SURR_R=.13 $LE GEODUMP=$T/eg.json TDUMP=$O/$K-$REF-estate.t.json MSG="$MSG" python3 $SIG/plan.py $T/all.json $C $T/eh.jpg > $T/plan.log 2>&1 \
+  && python3 $D/heritage/estate.py $T/eg.json $T/eh.jpg $T/eh.jpg $O/$K-$REF-estate.jpg > /dev/null || { echo "FAIL estate $K $REF"; tail -3 $T/plan.log; };; esac
+case " $ST " in *" architectural "*) env $TE HOLE=$REF NOPLAY=1 SIZE=$SIZE CTX=$I/ctx.json SURRCTX=$I/ctx.json SURR_R=.13 $LE TDUMP=$O/$K-$REF-architectural.t.json MSG="$MSG" python3 $SIG/plan.py $T/all.json $C $O/$K-$REF-architectural.jpg > $T/plan.log 2>&1 || { echo "FAIL plan $K $REF"; tail -3 $T/plan.log; };; esac
 # one world (course metres) -> poster px affine per style, plus the pin (centre of the green nearest the hole's end)
 python3 - $O $K $REF <<'PY'
 import json, sys, os; O, K, R = sys.argv[1:4]; g = json.load(open(f'{O}/{K}-{R}.geo.json')); a = g['m']; out = {}
-for st in ('detailed', 'charcoal', 'midnight', 'architectural'):
+for st in ('detailed', 'charcoal', 'midnight', 'architectural', 'heritage', 'estate'):
     p = f'{O}/{K}-{R}-{st}.t.json'
     if not os.path.exists(p): continue
     t = json.load(open(p))
-    if st == 'architectural': out[st] = {'m': [round(v, 5) for v in t['m']], 'W': t['W'], 'H': t['H']}
+    if st in ('architectural', 'heritage', 'estate'): out[st] = {'m': [round(v, 5) for v in t['m']], 'W': t['W'], 'H': t['H']}
     else:
         s = t['s']; bx = (t['offx']) * s + t['ox']; by = (t['offy']) * s + t['oy']
         out[st] = {'m': [round(v, 5) for v in (a[0] * s, a[1] * s, a[2] * s + bx, a[3] * s, a[4] * s, a[5] * s + by)], 'W': t['W'], 'H': t['H']}

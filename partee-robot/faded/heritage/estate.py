@@ -4,7 +4,7 @@ from PIL import Image, ImageDraw
 from shapely.geometry import Polygon
 from shapely.ops import unary_union
 geo, fin, nop, out = sys.argv[1:5]
-G = json.load(open(geo)); W, H = G['W'], G['H']; S = 2
+G = json.load(open(geo)); W, H = G['W'], G['H']; S = 2 if W <= 2000 else 1; Q = W / 1800; C = S * Q / 2   # tuned at 1800 px (S=2); print size keeps the same look
 PAPER = np.array((244, 238, 224), np.float32); INK = np.array((18, 53, 42), np.float32)
 def polys(k): return [Polygon(r[0], r[1:]).buffer(0) for r in G[k] if len(r[0]) > 2]
 def mask(geoms, grow=0):
@@ -21,7 +21,7 @@ def outline(geoms, w):
     for g in geoms:
         for p in ([g] if g.geom_type == 'Polygon' else list(getattr(g, 'geoms', []))):
             if p.is_empty or p.geom_type != 'Polygon': continue
-            for r in [p.exterior] + list(p.interiors): d.line([(x * S, y * S) for x, y in r.coords], fill=255, width=int(w * S), joint='curve')
+            for r in [p.exterior] + list(p.interiors): d.line([(x * S, y * S) for x, y in r.coords], fill=255, width=max(1, int(w * S * Q)), joint='curve')
     return np.asarray(m, np.float32) / 255
 yy, xx = np.mgrid[0:H * S, 0:W * S].astype(np.float32)
 def hatch(ang, sp, w):
@@ -36,40 +36,40 @@ land, fair, green, tee, bunk, water = (polys(k) for k in ('land', 'fair', 'green
 mL = mask(land)
 cov = cov * (1 - mL)
 # rough: fine diagonal engraving
-cov += mL * hatch(np.pi / 4, 7.0, 1.05) * .55
+cov += mL * hatch(np.pi / 4, 7.0 * C, 1.05 * C) * .55
 mF = mask(fair + tee); mG = mask(green); mB = mask(bunk); mW = mask(water)
 turf = np.clip(mF + mG, 0, 1)
 cov = cov * (1 - turf)                                   # fairways + greens: clean paper
-cov += mG * np.maximum(.14, hatch(0, 3.6, 1.5) * hatch(np.pi / 2, 3.6, 1.5) * .8) + mF * hatch(0, 9.0, .7) * .12            # faint mowing lines on fairways, light tint on greens
+cov += mG * np.maximum(.14, hatch(0, 3.6 * C, 1.5 * C) * hatch(np.pi / 2, 3.6 * C, 1.5 * C) * .8) + mF * hatch(0, 9.0 * C, .7 * C) * .12            # faint mowing lines on fairways, light tint on greens
 cov = cov * (1 - mB) + mB * 0                             # bunkers: paper, stippled below
 rng = np.random.default_rng(7); st = (rng.random((H * S, W * S)) < .055).astype(np.float32)
-st = cv2.dilate(st, np.ones((2, 2), np.uint8)); cov += mB * st * .75
+st = cv2.dilate(st, np.ones((max(2, round(2 * C)),) * 2, np.uint8)); cov += mB * st * .75
 # water: close horizontal lines, rippled rings outside the bank
-cov = cov * (1 - mW) + mW * np.maximum(hatch(np.pi / 2, 4.2, 1.6) * .85, .18)
+cov = cov * (1 - mW) + mW * np.maximum(hatch(np.pi / 2, 4.2 * C, 1.6 * C) * .85, .18)
 rip = np.zeros_like(cov)
 for k, g in enumerate((3.2, 6.4)):
-    rip = np.maximum(rip, outline([p.buffer(g) for p in water], .55) * (.55 - k * .2))
+    rip = np.maximum(rip, outline([p.buffer(g * Q) for p in water], .55) * (.55 - k * .2))
 cov = np.maximum(cov, rip * mL * (1 - turf))
 # trees: solid engraved crowns, cast shadow to SE in cross hatch, small lit nick to NW
 sh = Image.new('L', (W * S, H * S), 0); sd = ImageDraw.Draw(sh); tr = Image.new('L', (W * S, H * S), 0); td = ImageDraw.Draw(tr); hl = Image.new('L', (W * S, H * S), 0); hd = ImageDraw.Draw(hl)
 for x, y, r in G['crowns']:
-    X, Y, R = x * S, y * S, max(1.6, r) * S; o = R * .55
+    X, Y, R = x * S, y * S, max(1.6 * Q, r) * S; o = R * .55
     sd.ellipse([X - R + o, Y - R + o, X + R + o, Y + R + o], fill=255)
 for x, y, r in sorted(G['crowns'], key=lambda q: q[1]):
-    X, Y, R = x * S, y * S, max(1.6, r) * S
+    X, Y, R = x * S, y * S, max(1.6 * Q, r) * S
     td.ellipse([X - R, Y - R, X + R, Y + R], fill=255); hd.ellipse([X - R, Y - R, X + R, Y + R], fill=0)
     h = R * .32; hd.ellipse([X - R * .38 - h, Y - R * .38 - h, X - R * .38 + h, Y - R * .38 + h], fill=255)
 # traced woodland / scrub with no single crowns: small engraved bushes scattered through the real outline
 from shapely.prepared import prep; from shapely.geometry import Point
 rs = np.random.default_rng(9); pxm = G['px_m']; rg = Image.new('L', (W * S, H * S), 0); rd = ImageDraw.Draw(rg)
 for q in polys('scrub'):
-    if q.area < 4: continue
+    if q.area < 4 * Q * Q: continue
     pq = prep(q); bx0, by0, bx1, by1 = q.bounds; n_ = int(q.area / (34 * pxm * pxm))
     for x, y in [(x, y) for x, y in zip(rs.uniform(bx0, bx1, n_ * 3), rs.uniform(by0, by1, n_ * 3)) if pq.contains(Point(x, y))][:n_]:
-        X, Y, R = x * S, y * S, max(1.2, rs.uniform(2.0, 3.2) * pxm) * S
+        X, Y, R = x * S, y * S, max(1.2 * Q, rs.uniform(2.0, 3.2) * pxm) * S
         R *= .8; rd.ellipse([X - R, Y - R, X + R, Y + R], fill=255)
 sh, tr, hl = (np.asarray(m, np.float32) / 255 for m in (sh, tr, hl))
-cov = np.maximum(cov, sh * (1 - tr) * hatch(-np.pi / 4, 4.0, 1.4) * .8)
+cov = np.maximum(cov, sh * (1 - tr) * hatch(-np.pi / 4, 4.0 * C, 1.4 * C) * .8)
 cov = np.maximum(cov, np.asarray(rg, np.float32) / 255 * .9)
 cov = cov * (1 - tr) + tr * (.96 - hl * .5)
 # ink outlines: course edge, fairways, greens, tees, bunkers, water
@@ -80,22 +80,22 @@ for m in G.get('strip', []):
     P = lambda k: [Polygon(r[0], r[1:]).buffer(0) for r in m[k] if len(r[0]) > 2]
     ml, mf, mg, mb, mw, mt = (P(k) for k in ('land', 'fair', 'green', 'bunk', 'water', 'woods'))
     if not ml: continue
-    zl = mask(ml); cov = cov * (1 - zl) + zl * hatch(np.pi / 4, 4.0, .9) * .45
+    zl = mask(ml); cov = cov * (1 - zl) + zl * hatch(np.pi / 4, 4.0 * C, .9 * C) * .45
     zf = mask(mf); cov = cov * (1 - zf)
     zg = mask(mg); cov = cov * (1 - zg) + zg * .8
     zb = mask(mb); cov = cov * (1 - zb) + zb * .08
-    zw = mask(mw); cov = cov * (1 - zw) + zw * np.maximum(hatch(np.pi / 2, 3.0, 1.3) * .9, .3)
+    zw = mask(mw); cov = cov * (1 - zw) + zw * np.maximum(hatch(np.pi / 2, 3.0 * C, 1.3 * C) * .9, .3)
     zt = mask(mt); cov = np.maximum(cov, zt * .92)
     for g, w in ((ml, 1.1), (mf, .8), (mg, .8), (mb, .6), (mw, .8)): cov = np.maximum(cov, outline(g, w) * .95)
 cov = np.clip(cov, 0, 1)
 # hole markers + routing from the finished print (pixels that differ from the no-markers render)
 n = np.asarray(Image.open(nop).convert('RGB').resize((W * S, H * S), Image.LANCZOS), np.float32)
-dm = (np.abs(f - n).max(2) > 26).astype(np.uint8); dm = cv2.dilate(dm, np.ones((5, 5), np.uint8)); dm = cv2.morphologyEx(dm, cv2.MORPH_CLOSE, np.ones((9, 9), np.uint8))
-nc, lab, stt, _ = cv2.connectedComponentsWithStats(dm); keep = np.zeros(nc, np.uint8); keep[1:] = stt[1:, 4] > 2500 * S * S / 4   # tee markers only (pins dropped)
-dm = keep[lab].astype(np.float32) * (cv2.dilate((mL > .5).astype(np.uint8), np.ones((61, 61), np.uint8)) > 0)
+dm = (np.abs(f - n).max(2) > 26).astype(np.uint8); dm = cv2.dilate(dm, np.ones((int(5 * C) | 1,) * 2, np.uint8)); dm = cv2.morphologyEx(dm, cv2.MORPH_CLOSE, np.ones((int(9 * C) | 1,) * 2, np.uint8))
+nc, lab, stt, _ = cv2.connectedComponentsWithStats(dm); keep = np.zeros(nc, np.uint8); keep[1:] = stt[1:, 4] > 2500 * S * S * Q * Q / 4   # tee markers only (pins dropped)
+dm = keep[lab].astype(np.float32) * (cv2.dilate((mL > .5).astype(np.uint8), np.ones((int(61 * C) | 1,) * 2, np.uint8)) > 0)
 cov = cov * (1 - dm) + t * dm
 o = PAPER * (1 - cov[..., None]) + INK * cov[..., None]
 im = Image.fromarray(np.clip(o, 0, 255).astype(np.uint8)).resize((W, H), Image.LANCZOS)
-a = np.asarray(im, np.float32); g = cv2.GaussianBlur(np.random.default_rng(3).normal(0, 1, (H, W)).astype(np.float32), (0, 0), .7) * 3.2
+a = np.asarray(im, np.float32); g = cv2.GaussianBlur(np.random.default_rng(3).normal(0, 1, (H, W)).astype(np.float32), (0, 0), .7 * Q) * 3.2
 Image.fromarray(np.clip(a + g[..., None], 0, 255).astype(np.uint8)).save(out, quality=93)
 print(out)
