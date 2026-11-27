@@ -26,6 +26,9 @@ islands = []; new = []
 for i in range(1, n):
     if st[i, cv2.CC_STAT_AREA] * mpp * mpp < 25: continue   # >= 25 m2 of canopy = a real island copse
     m = (lab == i).astype(np.uint8)
+    yy_, xx_ = np.nonzero(m); cpt = Point(b['x0'] + xx_.mean() / sx, b['y1'] - yy_.mean() / sy)
+    host = [q for q in getattr(W_, 'geoms', [W_]) if q.contains(cpt)]
+    if not host or 2 * host[0].area / host[0].length < 12: continue   # islands only in real lakes (mean width > 12 m), never trees overhanging a stream
     cs, _ = cv2.findContours(cv2.dilate(m, np.ones((5, 5), np.uint8)), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     c = max(cs, key=cv2.contourArea)[:, 0, :]
     islands.append([[round(b['x0'] + x / sx, 1), round(b['y1'] - y / sy, 1)] for x, y in c])
