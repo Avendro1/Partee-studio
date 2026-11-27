@@ -581,27 +581,31 @@ if not (HOLE or PV): dr.line([(MG, STRIP[0] - U * 1.4), (W - MG, STRIP[0] - U * 
 name = c['name']; m = re.search(r'\s+(Golf (Club|Course|Links|Resort|Centre)|Golf (&|and) \w+ Club)', name)
 title = (name[:m.start()] if m else name.split(' - ')[0].split(',')[0]).replace(' (Old Course)', '').strip()
 if c.get('title'): title = c['title']
+_crs = '' if c.get('title') or ',' not in name else name.split(',', 1)[1].strip()   # 27 Nov: multi-course clubs name the course under the title (Killeen Course, Old Links...)
 def spw(t, f, tr): return sum(f.getlength(ch) for ch in t) + tr * (len(t) - 1)
 def spd(cx_, y, t, f, fill_, tr):
     x = cx_ - spw(t, f, tr) / 2
     for ch in t: dr.text((x, y), ch, font=f, fill=fill_, anchor='ls'); x += f.getlength(ch) + tr
-ty = H * (.905 if land_o else (.9 if HER else .91)); ft = F('corm500', U * (4.6 if HER else 4.0)); tr = U * 1.2
+ty = H * ((.888 if HER else .905) if land_o else (.9 if HER else .91)); ft = F('corm500', U * (4.6 if HER else 4.0)); tr = U * 1.2
 while spw(title.upper(), ft, tr) > W * .62: ft = F('corm500', ft.size * .95); tr *= .95
 if HOLE:
-    sub0 = title.upper(); title = f'HOLE {HOLE}'
+    sub0 = title.upper() + (f'  ·  {_crs.upper()}' if _crs else ''); title = f'HOLE {HOLE}'
 if HER:
     for k_, w_ in ((.42, .09), (.52, .04)): dr.rectangle([MG * k_, MG * k_, W - MG * k_, H - MG * k_], outline=INK2 if k_ > .5 else INK, width=max(1, int(U * w_)))
 spd(W / 2, ty, title.upper(), ft, INK, tr)
 lat, lon = c['lat'], c['lon']
-sub = '  ·  '.join([p for p in [(sub0 if HOLE else ''), (c.get('place', '').upper().split(', ')[-1] if HOLE else c.get('place', '').upper().replace(', ', '  ·  ')), f"{abs(lat):.4f}° {'N' if lat >= 0 else 'S'}  {abs(lon):.4f}° {'W' if lon < 0 else 'E'}"] if p])
+sub = '  ·  '.join([p for p in [(sub0 if HOLE else _crs.upper()), (c.get('place', '').upper().split(', ')[-1] if HOLE else c.get('place', '').upper().replace(', ', '  ·  ')), f"{abs(lat):.4f}° {'N' if lat >= 0 else 'S'}  {abs(lon):.4f}° {'W' if lon < 0 else 'E'}"] if p])
 fs2 = F('jost400', U * 1.2); trs = U * .42
 while spw(sub, fs2, trs) > W * .74: fs2 = F('jost400', fs2.size * .95); trs *= .95
 if HER and not HOLE:
-    _cy = ty + U * 2.6
+    _o1, _o2, _o3 = (2.2, 4.5, 6.2) if land_o else (2.6, 5.4, 7.4)   # 27 Nov: landscape title block tighter so the coordinates clear the border
+    _cy = ty + U * _o1
     for sgn in (-1, 1): dr.line([(W / 2 + sgn * U * 2.2, _cy), (W / 2 + sgn * U * 16, _cy)], fill=INK2, width=max(1, int(U * .08)))
     dr.polygon([(W / 2, _cy - U * .7), (W / 2 + U * .7, _cy), (W / 2, _cy + U * .7), (W / 2 - U * .7, _cy)], outline=INK, fill=PAPER, width=max(1, int(U * .1)))
-    _pl = c.get('place', '').upper(); _pl = _pl if 'IRELAND' in _pl else _pl + ', IRELAND'; _co = f"{abs(lat):.4f}° {'N' if lat >= 0 else 'S'}    {abs(lon):.4f}° {'W' if lon < 0 else 'E'}"
-    spd(W / 2, ty + U * 5.4, _pl, fs2, INK, trs); spd(W / 2, ty + U * 7.4, _co, F('jost400', U * 1.05), INK2, trs * .8)
+    _pl = c.get('place', '').upper(); _pl = _pl if 'IRELAND' in _pl else _pl + ', IRELAND'; _pl = (_crs.upper() + '  ·  ' + _pl) if _crs else _pl; _co = f"{abs(lat):.4f}° {'N' if lat >= 0 else 'S'}    {abs(lon):.4f}° {'W' if lon < 0 else 'E'}"
+    _f3 = fs2; _t3 = trs
+    while spw(_pl, _f3, _t3) > W * .74: _f3 = F('jost400', _f3.size * .95); _t3 *= .95
+    spd(W / 2, ty + U * _o2, _pl, _f3, INK, _t3); spd(W / 2, ty + U * _o3, _co, F('jost400', U * 1.05), INK2, trs * .8)
 else:
     dr.line([(W / 2 - U * 3, ty + U * 2.2), (W / 2 + U * 3, ty + U * 2.2)], fill=INK2, width=max(1, int(U * .1)))
     spd(W / 2, ty + U * 4.4, sub, fs2, INK2, trs)
