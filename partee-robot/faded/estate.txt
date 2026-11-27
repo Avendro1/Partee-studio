@@ -1,7 +1,19 @@
-# part 6C: six courses with missing holes filled (maps d8152e0)
-carrick-on-shannon
-kilrea
-omagh
-spa
-strandhill
-woodbrook
+# part 6D: odd hole counts fixed (maps 1b3c035)
+abbeyleix
+at-roe-valley
+black-bush
+castlecomer
+cloverhill
+concra-wood
+bright
+kilkeel
+killerig
+mount-temple
+rossmore
+mountain-view
+rosslare-burrow
+ballyheigue-castle
+clogher-valley
+glengarriff
+redcastle-hotel
+strokestown
