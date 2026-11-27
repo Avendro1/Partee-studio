@@ -12,13 +12,14 @@ from shapely.prepared import prep
 HERE = os.path.dirname(os.path.abspath(__file__)); FD = HERE + '/../../fonts/'
 F = lambda n, s: ImageFont.truetype(FD + n + '.ttf', max(6, int(s)))
 d = json.load(open(sys.argv[1])); c = json.load(open(sys.argv[2])); out = sys.argv[3]
+if os.environ.get("EXTRA_CROWNS"): d["crowns"] = d.get("crowns", []) + json.load(open(os.environ["EXTRA_CROWNS"]))   # 27 Nov heritage: real canopy from satellite (canopy.py), so tree density matches the ground
 PV = bool(c.get("preview"))   # satellite preview (26 Nov): holes not routed yet, so no line of play, flags or hole strip
 PAPER = (240, 234, 219); INK = (36, 46, 38); INK2 = (110, 108, 94); RED = (150, 70, 48)
 LANDF = (232, 228, 208); FAIR = (196, 210, 160); GRN = (170, 196, 128); TREEF = (134, 150, 114); WATERF = (196, 210, 206); WATERL = (92, 124, 132); SANDF = (246, 240, 222); SANDD = (150, 130, 96); BLD = (214, 206, 188)
 # HERITAGE (27 Nov, Shane: 'get this exact look'): same traced drawing, full daylight colour like a hand-painted estate map:
 # vivid striped fairways, deep shaded tree canopies, blue water, cream hole markers in ink, double-rule border, deep green title.
 HER = os.environ.get('PLAN_STYLE') == 'heritage'
-if HER: PAPER = (238, 224, 206); INK = (41, 59, 29); INK2 = (104, 98, 78); LANDF = (190, 180, 128); FAIR = (134, 150, 62); GRN = (148, 166, 70); TREEF = (66, 84, 40); WATERF = (76, 118, 126); WATERL = (52, 80, 86); SANDF = (232, 220, 192); SANDD = (176, 156, 116); BLD = (226, 214, 196)   # sampled from Shane's reference 27 Nov
+if HER: PAPER = (238, 224, 206); INK = (41, 59, 29); INK2 = (104, 98, 78); LANDF = (180, 172, 124); FAIR = (110, 126, 50); GRN = (124, 142, 58); TREEF = (66, 84, 40); WATERF = (76, 118, 126); WATERL = (52, 80, 86); SANDF = (232, 220, 192); SANDD = (176, 156, 116); BLD = (226, 214, 196)   # sampled from Shane's reference 27 Nov
 def polys(g):
     for p in getattr(g, 'geoms', [g]):
         if p.geom_type == 'Polygon' and not p.is_empty: yield p
@@ -350,7 +351,7 @@ for x, y, r in gorse:
         a = k * 2 * math.pi / 7; dr.line([(X, Y), (X + math.cos(a) * R_ * 1.25, Y + math.sin(a) * R_ * 1.25)], fill=(62, 70, 46), width=max(1, LW(.025)))
 # trees: soft cast shadow (light from NW), then each real crown shaded with a lit side, three greens for variety
 TG = [(112, 132, 96), (124, 144, 104), (100, 122, 90)]; TL = (168, 182, 136); TO = (64, 82, 60)
-if HER: TG = [(50, 70, 32), (62, 82, 36), (44, 62, 28)]; TL = (150, 160, 74); TO = (28, 38, 20)
+if HER: TG = [(56, 70, 30), (66, 79, 36), (48, 62, 26)]; TL = (100, 112, 56); TO = (26, 38, 16)   # 27 Nov: dark greens sampled from Shane's reference trees (shadow 32,46,19 / mid 66,78,37 / lit 92,104,56)
 sh = Image.new('L', im.size, 0); sd = ImageDraw.Draw(sh)
 CK = .74 if HER else .62
 for x, y, r in crowns:
@@ -361,13 +362,13 @@ a_ = np.asarray(im, np.float32); a_ = a_ * (1 - sh * (.42 if HER else .22)); im 
 for x, y, r in sorted(crowns, key=lambda t: -t[1]):
     X, Y = T(x, y); R_ = max(1.5 * SS, r * CK * s * SS); k_ = (int(x * 7.3) ^ int(y * 3.1)) % 3
     dr.ellipse([X - R_, Y - R_, X + R_, Y + R_], fill=TG[k_], outline=TO, width=max(1, LW(.035)))
-    hr = R_ * .55; dr.ellipse([X - R_ * .38 - hr, Y - R_ * .38 - hr, X - R_ * .38 + hr, Y - R_ * .38 + hr], fill=tuple(int(a * .55 + b * .45) for a, b in zip(TL, TG[k_])))
-    if HER: hr2 = R_ * .22; dr.ellipse([X - R_ * .45 - hr2, Y - R_ * .45 - hr2, X - R_ * .45 + hr2, Y - R_ * .45 + hr2], fill=TL)
+    hr = R_ * .55; dr.ellipse([X - R_ * .38 - hr, Y - R_ * .38 - hr, X - R_ * .38 + hr, Y - R_ * .38 + hr], fill=tuple(int(a * .55 + b * .45) for a, b in zip(TL, TG[k_])) if not HER else tuple(int(a * .45 + b * .55) for a, b in zip(TL, TG[k_])))
+    if HER: hr2 = R_ * .22; dr.ellipse([X - R_ * .45 - hr2, Y - R_ * .45 - hr2, X - R_ * .45 + hr2, Y - R_ * .45 + hr2], fill=(112, 124, 62) if HER else TL)
 # first cut: a slightly lighter band of semi-rough hugging every fairway (real on every course)
 _fc = unary_union([fair, green]).buffer(3.5 if HER else 2.5, 8).difference(unary_union([fair, green, bunk, water]))
 if HER:   # first cut: a darker green that melts into the rough (no hard band)
     _fm2 = cv2.GaussianBlur(mask_of(unary_union([fair, green]).buffer(4.5, 8).intersection(land), T), (0, 0), max(1, U * .45 * SS))[..., None]
-    a_ = np.asarray(im, np.float32); a_ = a_ * (1 - _fm2 * .8) + np.array((100, 116, 46), np.float32) * _fm2 * .8; im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
+    a_ = np.asarray(im, np.float32); a_ = a_ * (1 - _fm2 * .8) + np.array((90, 104, 44), np.float32) * _fm2 * .8; im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
 else: fill(_fc.intersection(land), tuple(min(255, int(v * 1.0 + 18)) for v in LANDF), T)
 # fairways with mowing stripes along each hole
 fill(fair, FAIR, T); fill(tee, FAIR, T)
@@ -389,14 +390,14 @@ if HER:   # soft bevel: turf darkens toward its edge and lifts in the middle, so
     _sh2 = cv2.GaussianBlur(_sh2, (0, 0), max(1, U * .2 * SS))
     _ce = np.clip(1 - _ed, 0, 1) * cv2.GaussianBlur(fm, (0, 0), max(1, U * 1.2 * SS))   # lighter, yellower centre line of the mown turf
     a_ = np.asarray(im, np.float32); a_ = a_ * (1 - np.clip(_ed, 0, 1)[..., None] * .2) * (1 - _sh2[..., None] * .35)
-    a_ = a_ + (np.array((196, 204, 112), np.float32) - a_) * (_ce[..., None] * .28)
+    a_ = a_ + (np.array((156, 168, 84), np.float32) - a_) * (_ce[..., None] * .26)
     im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
-if HER: line(fair, (92, 110, 44), LW(.05), T); line(tee, (92, 110, 44), LW(.05), T)
+if HER: line(fair, (78, 94, 38), LW(.05), T); line(tee, (78, 94, 38), LW(.05), T)
 else: line(fair, INK, LW(.08), T); line(tee, INK, LW(.07), T)
 # greens: fill, a lighter collar ring inside, crisp edge
 fill(green, GRN, T)
 gi = green.buffer(-1.2, 8)
-fill(gi, (158, 176, 78) if HER else (182, 206, 140), T); line(green, (92, 110, 44) if HER else INK, LW(.05 if HER else .09), T)
+fill(gi, (138, 156, 66) if HER else (182, 206, 140), T); line(green, (92, 110, 44) if HER else INK, LW(.05 if HER else .09), T)
 # water: fill, waterlines, darker shore edge
 fill(water, WATERF, T)
 if not HER: waterlines(water, T, s, LW(.04))
