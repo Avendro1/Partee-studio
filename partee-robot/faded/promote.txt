@@ -1,4 +1,5 @@
-# batch 14: fota-island Belvelly, enniscrone Dunes, castlerock update (maps 98ea531)
-fota-island
-enniscrone
-castlerock
+# batch 15: Ballyliffin Old + Glashedy, Clandeboye Dufferin + Ava (maps e3a2dd9)
+ballyliffin-old
+ballyliffin-glashedy
+clandeboye-dufferin
+clandeboye-ava
