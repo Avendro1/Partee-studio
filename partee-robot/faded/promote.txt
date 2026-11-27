@@ -1,2 +1,2 @@
-# batch 16: citywest (maps 1d1c6d4)
+# batch 16: citywest (maps 60c1ba0)
 citywest
