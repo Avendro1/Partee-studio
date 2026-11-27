@@ -473,13 +473,17 @@ if HER:   # painted finish (27 Nov, Shane: 'more of the painted look'): wobble e
     im = Image.fromarray(np.clip(_p, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
 # flags on the real pin positions (inside a green)
 gp = prep(green.buffer(2))
-NOPLAY = (HOLE and os.environ.get('NOPLAY') == '1') or PV   # shop single-hole print: the designer/robot draw the customer's own shots + flag on top
+NOPLAY = (HOLE and os.environ.get('NOPLAY') == '1') or PV or os.environ.get('NOPLAY') == '2'   # shop single-hole print: the designer/robot draw the customer's own shots + flag on top
 for px_, py_ in ([] if NOPLAY else d.get('pins', [])):
     if not gp.contains(Point(px_, py_)): continue
     X, Y = T(px_, py_); hpole = U * 1.0 * SS
     dr.ellipse([X - U * .12 * SS, Y - U * .06 * SS, X + U * .12 * SS, Y + U * .06 * SS], fill=(60, 70, 60))
     dr.line([(X, Y), (X, Y - hpole)], fill=INK, width=LW(.06))
     dr.polygon([(X, Y - hpole), (X + U * .55 * SS, Y - hpole + U * .2 * SS), (X, Y - hpole + U * .4 * SS)], fill=RED)
+if os.environ.get('GEODUMP'):   # 27 Nov: course geometry in poster px, for styles drawn from the vectors (estate.py)
+    _P = lambda g: [[[(T(*q)[0] / SS, T(*q)[1] / SS) for q in p_.exterior.coords]] + [[(T(*q)[0] / SS, T(*q)[1] / SS) for q in i_.coords] for i_ in p_.interiors] for p_ in polys(g)]
+    json.dump({'W': W, 'H': H, 'px_m': s, **{k: _P(g) for k, g in (('land', land), ('fair', fair), ('green', green), ('tee', tee), ('bunk', bunk), ('water', water), ('woods', woods), ('scrub', _sc))},
+               'crowns': [(T(x, y)[0] / SS, T(x, y)[1] / SS, r * CK * s) for x, y, r in crowns]}, open(os.environ['GEODUMP'], 'w'))
 line(land, (44, 58, 30) if HER else INK, LW(.1 if HER else .14), T)
 # line of play + numbered tee circles (red ink, like an architect's routing)
 fn = F('corm500', U * (1.75 if HER else 1.35) * SS); rr = U * (1.45 if HER else 1.05) * SS
