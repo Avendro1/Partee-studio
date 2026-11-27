@@ -35,18 +35,12 @@ cov = t.copy()
 land, fair, green, tee, bunk, water = (polys(k) for k in ('land', 'fair', 'green', 'tee', 'bunk', 'water'))
 mL = mask(land)
 cov = cov * (1 - mL)
-_lb = max(y for r in G['land'] for x, y in r[0]) * S
-_sb = (yy > _lb + 40 * S) & (yy < H * S * .855)
-_sh = cv2.morphologyEx(((t > .3) & _sb).astype(np.uint8), cv2.MORPH_CLOSE, np.ones((9 * S, 9 * S), np.uint8))
-_n, _lab, _st, _ = cv2.connectedComponentsWithStats(_sh); _k = np.zeros(_n, np.float32); _k[1:] = _st[1:, 4] > 900 * S * S
-_sh = cv2.GaussianBlur(_k[_lab], (0, 0), .8)
-cov = np.where(_sb, np.maximum(cov, _sh * .92), cov)
 # rough: fine diagonal engraving
 cov += mL * hatch(np.pi / 4, 7.0, 1.05) * .55
 mF = mask(fair + tee); mG = mask(green); mB = mask(bunk); mW = mask(water)
 turf = np.clip(mF + mG, 0, 1)
 cov = cov * (1 - turf)                                   # fairways + greens: clean paper
-cov += mG * .10 + mF * hatch(0, 9.0, .7) * .12            # faint mowing lines on fairways, light tint on greens
+cov += mG * np.maximum(.14, hatch(0, 3.6, 1.5) * hatch(np.pi / 2, 3.6, 1.5) * .8) + mF * hatch(0, 9.0, .7) * .12            # faint mowing lines on fairways, light tint on greens
 cov = cov * (1 - mB) + mB * 0                             # bunkers: paper, stippled below
 rng = np.random.default_rng(7); st = (rng.random((H * S, W * S)) < .055).astype(np.float32)
 st = cv2.dilate(st, np.ones((2, 2), np.uint8)); cov += mB * st * .75
@@ -81,12 +75,24 @@ cov = cov * (1 - tr) + tr * (.96 - hl * .5)
 # ink outlines: course edge, fairways, greens, tees, bunkers, water
 for g, w, a in ((land, 2.6, 1), (fair + tee, 1.3, .95), (green, 1.6, 1), (bunk, 1.0, .9), (water, 1.8, 1)):
     cov = np.maximum(cov, outline(g, w) * a)
+# hole strip: each mini hole engraved from its own traced features (land tint, clean fairways, dotted greens, ruled water, ink trees)
+for m in G.get('strip', []):
+    P = lambda k: [Polygon(r[0], r[1:]).buffer(0) for r in m[k] if len(r[0]) > 2]
+    ml, mf, mg, mb, mw, mt = (P(k) for k in ('land', 'fair', 'green', 'bunk', 'water', 'woods'))
+    if not ml: continue
+    zl = mask(ml); cov = cov * (1 - zl) + zl * hatch(np.pi / 4, 4.0, .9) * .45
+    zf = mask(mf); cov = cov * (1 - zf)
+    zg = mask(mg); cov = cov * (1 - zg) + zg * .8
+    zb = mask(mb); cov = cov * (1 - zb) + zb * .08
+    zw = mask(mw); cov = cov * (1 - zw) + zw * np.maximum(hatch(np.pi / 2, 3.0, 1.3) * .9, .3)
+    zt = mask(mt); cov = np.maximum(cov, zt * .92)
+    for g, w in ((ml, 1.1), (mf, .8), (mg, .8), (mb, .6), (mw, .8)): cov = np.maximum(cov, outline(g, w) * .95)
 cov = np.clip(cov, 0, 1)
 # hole markers + routing from the finished print (pixels that differ from the no-markers render)
 n = np.asarray(Image.open(nop).convert('RGB').resize((W * S, H * S), Image.LANCZOS), np.float32)
 dm = (np.abs(f - n).max(2) > 26).astype(np.uint8); dm = cv2.dilate(dm, np.ones((5, 5), np.uint8)); dm = cv2.morphologyEx(dm, cv2.MORPH_CLOSE, np.ones((9, 9), np.uint8))
 nc, lab, stt, _ = cv2.connectedComponentsWithStats(dm); keep = np.zeros(nc, np.uint8); keep[1:] = stt[1:, 4] > 2500 * S * S / 4   # tee markers only (pins dropped)
-dm = keep[lab].astype(np.float32)
+dm = keep[lab].astype(np.float32) * (cv2.dilate((mL > .5).astype(np.uint8), np.ones((61, 61), np.uint8)) > 0)
 cov = cov * (1 - dm) + t * dm
 o = PAPER * (1 - cov[..., None]) + INK * cov[..., None]
 im = Image.fromarray(np.clip(o, 0, 255).astype(np.uint8)).resize((W, H), Image.LANCZOS)

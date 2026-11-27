@@ -522,12 +522,13 @@ cellw = (W - 2 * MG) / per; cellh = (STRIP[1] - STRIP[0]) / rows
 segs = []
 for h in order:
     p = h['pts']; ang = math.degrees(math.atan2(p[-1][1] - p[0][1], p[-1][0] - p[0][0]))
-    zone = LineString(p).buffer(30, 16)
+    zone = LineString(p).buffer(float(os.environ.get('STRIP_Z', '30')), 16)
     rot = lambda g, a_=90 - ang, o_=Point(p[0]): affinity.rotate(g, a_, origin=o_)
     segs.append((h, zone, rot, ang))
 hmax = max(rot(zone).bounds[3] - rot(zone).bounds[1] for h, zone, rot, ang in segs) if segs else 1; wmax = max(rot(zone).bounds[2] - rot(zone).bounds[0] for h, zone, rot, ang in segs) if segs else 1
 ssx = min((cellh - U * 3.4) / hmax, (cellw * .92) / wmax)
 fs = F('jost400', U * 1.0 * SS)
+_strip = []
 for i, (h, zone, rot, ang) in enumerate(segs):
     r_, k_ = divmod(i, per); ccx = MG + cellw * (k_ + .5); top = STRIP[0] + r_ * cellh
     bz = rot(zone).bounds; zc = ((bz[0] + bz[2]) / 2, (bz[1] + bz[3]) / 2)
@@ -551,6 +552,9 @@ for i, (h, zone, rot, ang) in enumerate(segs):
         a_ = a_ * (1 - l2[..., None] * .3) + np.array((252, 248, 228), np.float32) * l2[..., None] * .3
         im = Image.fromarray(np.clip(a_, 0, 255).astype(np.uint8)); dr = ImageDraw.Draw(im)
         for g, oc in ((R(fair), INK), (R(green), INK), (R(bunk), (92, 80, 58))): line(g, oc, LW(.04), T2)
+    if os.environ.get('GEODUMP'):
+        _P2 = lambda g, T2=T2: [[[(T2(*q)[0] / SS, T2(*q)[1] / SS) for q in p_.exterior.coords]] + [[(T2(*q)[0] / SS, T2(*q)[1] / SS) for q in i_.coords] for i_ in p_.interiors] for p_ in polys(g)]
+        _strip.append({'land': _P2(rz.intersection(rot(land))), 'fair': _P2(unary_union([R(fair), R(tee)])), 'green': _P2(R(green)), 'bunk': _P2(R(bunk.buffer(.35, 6))), 'water': _P2(R(water)), 'woods': _P2(R(woods))})
     rp = rot(LineString(h['pts']))
     if not HER: dr.line([T2(*q) for q in rp.coords], fill=RED, width=LW(.05))
     dr.text((ccx * SS, (top + cellh - U * .9) * SS), str(h['ref']), font=fs, fill=INK, anchor='ms')
@@ -606,4 +610,6 @@ if msg:
     z = U * 2.0; fm = F('corm500i', z)
     while fm.getlength(msg) > W * .7 and z > 10: z -= 2; fm = F('corm500i', z)
     dr.text((W / 2, MG * .6), msg, font=fm, fill=INK2, anchor='ms')
+if os.environ.get('GEODUMP'):
+    _gd = json.load(open(os.environ['GEODUMP'])); _gd['strip'] = _strip; json.dump(_gd, open(os.environ['GEODUMP'], 'w'))
 im.save(out, quality=94); print(out, im.size, len(crowns), 'trees', step, 'm contours')

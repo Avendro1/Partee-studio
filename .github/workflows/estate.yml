@@ -1,0 +1,39 @@
+# Estate style (engraved deep green on ivory) for every listed course and hole at 1800x2400. Start: edit partee-robot/faded/estate.txt and push.
+name: estate
+on:
+  push:
+    paths: ['partee-robot/faded/estate.txt']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      keys: ${{ steps.s.outputs.keys }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: partee-robot/faded/estate.txt }
+      - id: s
+        run: python3 -c "import json; k=[l.strip() for l in open('partee-robot/faded/estate.txt') if l.strip() and not l.startswith('#')]; print('keys='+json.dumps(k))" >> $GITHUB_OUTPUT
+  run:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      max-parallel: 18
+      matrix:
+        key: ${{ fromJson(needs.plan.outputs.keys) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install -q numpy scipy shapely pillow opencv-python-headless scikit-image
+      - run: |
+          sudo swapoff -a || true; sudo fallocate -l 16G /mnt/swap2 && sudo chmod 600 /mnt/swap2 && sudo mkswap /mnt/swap2 >/dev/null && sudo swapon /mnt/swap2
+          sudo mkdir -p /tmp/claude-0/osm/stamp /tmp/claude-0/osm/gate /tmp/claude-0/osm/sat; sudo chmod -R 777 /tmp/claude-0
+      - run: bash partee-robot/faded/estate.sh ${{ matrix.key }} /tmp/es
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: 'es-${{ matrix.key }}', path: /tmp/es, retention-days: 14 }
