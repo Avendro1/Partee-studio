@@ -1,5 +1,28 @@
-# heritage part 3: map fixes + new pages
-killarney-fishing
-headfort
-killarney-mahony-s-point
-headfort-old
+# heritage part 4: courses added 26-27 Nov
+ballybunion-cashen
+ballyliffin-glashedy
+ballyliffin-old
+carlow-oak-park
+carne-wild-atlantic-dunes
+castlerock-bann
+citywest
+clandeboye-ava
+clandeboye-dufferin
+corrstown-orchard
+county-sligo-bomore
+deer-park-st-fintans
+donabate-yellow-blue
+druids-heath
+dun-laoghaire-lower-middle
+enniscrone-scurmore
+fota-island-barryscourt
+foyle-woodlands
+lahinch-castle
+malahide-blue-yellow
+portmarnock-yellow
+portstewart-old
+portstewart-riverside
+rosapenna-sandy-hills
+rosapenna-st-patricks
+rosslare-burrow
+royal-tara-cluide-tara
