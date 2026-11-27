@@ -50,6 +50,16 @@ rip = np.zeros_like(cov)
 for k, g in enumerate((3.2, 6.4)):
     rip = np.maximum(rip, outline([p.buffer(g * Q) for p in water], .55) * (.55 - k * .2))
 cov = np.maximum(cov, rip * mL * (1 - turf))
+# buildings (27 Nov): the club's real footprints, engraved: paper roof, the shaded half cross-hatched, ridge + hips, cast shadow to the SE
+if G.get('bld'):
+    bl_ = polys('bld'); mBl = mask(bl_); mRd = mask(polys('roofd')) if G.get('roofd') else mBl * 0
+    o_ = max(2, int(2.4 * C)); shB = np.roll(np.roll(mBl, o_, 0), o_, 1) * (1 - mBl)
+    cov = np.maximum(cov * (1 - mBl), shB * hatch(-np.pi / 4, 2.6 * C, .9 * C) * .9)
+    cov += mRd * hatch(np.pi / 4, 2.4 * C, .9 * C) * .8
+    rg_ = Image.new('L', (W * S, H * S), 0); rgd = ImageDraw.Draw(rg_)
+    for ln_ in G.get('ridge', []):
+        if len(ln_) > 1: rgd.line([(x * S, y * S) for x, y in ln_], fill=255, width=max(1, int(.7 * S * Q)))
+    cov = np.maximum(cov, np.asarray(rg_, np.float32) / 255 * .9); cov = np.maximum(cov, outline(bl_, 1.1))
 # trees: solid engraved crowns, cast shadow to SE in cross hatch, small lit nick to NW
 sh = Image.new('L', (W * S, H * S), 0); sd = ImageDraw.Draw(sh); tr = Image.new('L', (W * S, H * S), 0); td = ImageDraw.Draw(tr); hl = Image.new('L', (W * S, H * S), 0); hd = ImageDraw.Draw(hl)
 for x, y, r in G['crowns']:

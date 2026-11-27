@@ -22,11 +22,11 @@ if os.environ.get("EXTRA_CROWNS"):
     d["crowns"] = _cr + _ex   # 27 Nov heritage: real canopy from satellite (canopy.py), so tree density matches the ground
 PV = bool(c.get("preview"))   # satellite preview (26 Nov): holes not routed yet, so no line of play, flags or hole strip
 PAPER = (240, 234, 219); INK = (36, 46, 38); INK2 = (110, 108, 94); RED = (150, 70, 48)
-LANDF = (232, 228, 208); FAIR = (196, 210, 160); GRN = (170, 196, 128); TREEF = (134, 150, 114); WATERF = (196, 210, 206); WATERL = (92, 124, 132); SANDF = (246, 240, 222); SANDD = (150, 130, 96); BLD = (214, 206, 188)
+LANDF = (232, 228, 208); FAIR = (196, 210, 160); GRN = (170, 196, 128); TREEF = (134, 150, 114); WATERF = (196, 210, 206); WATERL = (92, 124, 132); SANDF = (246, 240, 222); SANDD = (150, 130, 96); BLD = (214, 206, 188); BLDD = (188, 178, 158)
 # HERITAGE (27 Nov, Shane: 'get this exact look'): same traced drawing, full daylight colour like a hand-painted estate map:
 # vivid striped fairways, deep shaded tree canopies, blue water, cream hole markers in ink, double-rule border, deep green title.
 HER = os.environ.get('PLAN_STYLE') == 'heritage'
-if HER: PAPER = (238, 224, 206); INK = (41, 59, 29); INK2 = (104, 98, 78); LANDF = (180, 172, 124); FAIR = (110, 126, 50); GRN = (124, 142, 58); TREEF = (66, 84, 40); WATERF = (76, 118, 126); WATERL = (52, 80, 86); SANDF = (232, 220, 192); SANDD = (176, 156, 116); BLD = (226, 214, 196)   # sampled from Shane's reference 27 Nov
+if HER: PAPER = (238, 224, 206); INK = (41, 59, 29); INK2 = (104, 98, 78); LANDF = (180, 172, 124); FAIR = (110, 126, 50); GRN = (124, 142, 58); TREEF = (66, 84, 40); WATERF = (76, 118, 126); WATERL = (52, 80, 86); SANDF = (232, 220, 192); SANDD = (176, 156, 116); BLD = (146, 131, 110); BLDD = (116, 104, 88)   # 27 Nov: buildings as a painted stone roof (pale fill read as a white hole on the dark land); sampled from Shane's reference 27 Nov
 def polys(g):
     for p in getattr(g, 'geoms', [g]):
         if p.geom_type == 'Polygon' and not p.is_empty: yield p
@@ -56,7 +56,54 @@ if HOLE:   # the course as it really is, within a rounded slice around this hole
     _cl = unary_union([_all.buffer(42, 32)] + [g.buffer(14, 16) for g in (fair, green, tee) if not g.is_empty]).buffer(40, 32).buffer(-40, 32)
     land = _cl.intersection(hl.buffer(HW, 48)).buffer(-6, 32).buffer(6, 32).simplify(.8)
     land = unary_union([Polygon(p.exterior) for p in polys(land) if p.area > 2000])
-fair, tee, green, bunk, water, bld = [g.intersection(land.buffer(-2)) for g in (fair, tee, green, bunk, water, bld)]
+# 27 Nov: the club's own buildings (FAC= from fac_fetch.py) are drawn whole at their real footprint; the course ground is extended to
+# take in the clubhouse so it sits on the course, not floating in the faded surroundings. No building is ever cut by the land edge.
+from shapely.ops import nearest_points as _np_
+FACIN = []
+if os.environ.get('FAC') and os.path.exists(os.environ['FAC']):
+    _fb = [Polygon(list(zip(c[::2], c[1::2]))).buffer(0) for c in json.load(open(os.environ['FAC'])).get('fac', []) if len(c) >= 8]
+    _fb = [p for p in _fb if not p.is_empty and p.area > 8]
+    if _fb and not HOLE:
+        _ext = []
+        for p in _fb:
+            dd = p.distance(land)
+            if dd <= 160:
+                _ext.append(p.buffer(12, 8))
+                if dd > 0: a_, b_ = _np_(p, land); _ext.append(LineString([a_, b_]).buffer(16, 8))
+        if _ext:
+            land = unary_union([land] + _ext).buffer(10, 32).buffer(-10, 32).simplify(.8)
+            land = unary_union([Polygon(p.exterior) for p in polys(land) if p.area > 5000])
+    if _fb and HOLE:   # hole slice: a club building that the slice reaches is drawn whole, with the slice edge widened around it
+        _hx = [p.buffer(8, 8) for p in _fb if land.contains(p.representative_point()) and not land.buffer(-1).contains(p)]
+        if _hx: land = unary_union([land] + _hx).buffer(6, 32).buffer(-6, 32).simplify(.8); land = unary_union([Polygon(p.exterior) for p in polys(land) if p.area > 2000])
+    FACIN = [p for p in _fb if land.buffer(-1).contains(p.representative_point())]
+_bk = [p for p in polys(bld) if land.buffer(-2).contains(p.representative_point())]   # whole buildings only
+fair, tee, green, bunk, water = [g.intersection(land.buffer(-2)) for g in (fair, tee, green, bunk, water)]
+bld = unary_union(_bk + FACIN) if (_bk or FACIN) else bld.intersection(land.buffer(-2))
+def roof_parts(g):
+    # hipped-roof look from the real footprint: split along the long axis, the SE half in shade (light from the NW), ridge + hips
+    dark, ridge = [], []
+    for p in polys(g):
+        p = p.simplify(.25)
+        if p.is_empty or p.area < 30: continue
+        r = list(p.minimum_rotated_rectangle.exterior.coords)[:4]
+        e0 = (r[1][0] - r[0][0], r[1][1] - r[0][1]); e1 = (r[2][0] - r[1][0], r[2][1] - r[1][1])
+        l0, l1 = math.hypot(*e0), math.hypot(*e1)
+        if l0 < l1: r = r[1:] + r[:1]; e0, e1, l0, l1 = e1, (-e0[0], -e0[1]), l1, l0
+        ux, uy = e0[0] / l0, e0[1] / l0; nx, ny = -uy, ux
+        if nx - ny < 0: nx, ny = -nx, -ny          # normal pointing to the SE (shadow side)
+        c = p.centroid; hw = l1 / 2; hl_ = max(0, l0 / 2 - hw)
+        cx = sum(q[0] for q in r) / 4; cy = sum(q[1] for q in r) / 4
+        big = Polygon([(cx - ux * l0, cy - uy * l0), (cx + ux * l0, cy + uy * l0), (cx + ux * l0 + nx * l1 * 2, cy + uy * l0 + ny * l1 * 2), (cx - ux * l0 + nx * l1 * 2, cy - uy * l0 + ny * l1 * 2)])
+        dk = p.intersection(big)
+        if not dk.is_empty: dark.append(dk)
+        a_ = (cx - ux * hl_, cy - uy * hl_); b_ = (cx + ux * hl_, cy + uy * hl_)
+        if p.area / max(1, l0 * l1) < .8: continue   # round / irregular footprints: shaded half only, no ridge lines
+        if hl_ > .5: ridge.append(LineString([a_, b_]).intersection(p))
+        for q in r:   # hips: corner to nearest ridge end
+            e_ = min((a_, b_), key=lambda z: math.hypot(z[0] - q[0], z[1] - q[1])); hh = LineString([q, e_]).intersection(p.buffer(-.3))
+            if not hh.is_empty: ridge.append(hh)
+    return unary_union(dark) if dark else Polygon(), [x for x in ridge if not x.is_empty]
 if HOLE:   # only this hole is drawn: its own fairway/green/tees and the bunkers that guard it; every other hole's turf becomes rough
     _lb = hl.buffer(30, 16)
     def _own(g, k, dmax):   # keep the traced pieces that belong to this hole (raw shapes, so a neighbour's fairway that touches isn't dragged in)
@@ -424,7 +471,14 @@ bm = mask_of(bunk, T); sh_ = max(1, int(U * .14 * SS))
 lip = np.clip(bm - np.roll(np.roll(bm, sh_, 0), sh_, 1), 0, 1); lip = cv2.GaussianBlur(lip, (0, 0), sh_ * .6)[..., None] * bm[..., None]
 a_ = np.asarray(im, np.float32); a_ = a_ * (1 - lip * .42); im = Image.fromarray(a_.astype(np.uint8)); dr = ImageDraw.Draw(im)
 line(bunk, (176, 156, 116) if HER else (92, 80, 58), LW(.05 if HER else .08), T)
-fill(bld, BLD, T); line(bld, INK2, LW(.05), T)
+if not bld.is_empty:   # soft cast shadow + ink edge so a clubhouse reads as a building, not a gap
+    _sm = mask_of(bld, T); _o = max(1, int(U * .35 * SS)); _sh = np.roll(np.roll(_sm, _o, 0), _o, 1) * (1 - _sm)
+    _sh = cv2.GaussianBlur(_sh, (0, 0), _o * .7)[..., None]; a_ = np.asarray(im, np.float32) * (1 - _sh * .35); im = Image.fromarray(a_.astype(np.uint8)); dr = ImageDraw.Draw(im)
+fill(bld, BLD, T); _rd, _rr = roof_parts(bld); fill(_rd, BLDD, T)
+for _l in _rr:
+    for _g in (getattr(_l, 'geoms', None) or [_l]):
+        if _g.geom_type == 'LineString' and len(_g.coords) > 1: dr.line([T(*q) for q in _g.coords], fill=INK2, width=max(1, LW(.035)))
+line(bld, INK if HER else INK2, LW(.07 if HER else .06), T)
 # LIDAR (24 Nov): real 1-2 m laser relief (GSI/OPW open data, CC BY 4.0) from LIDAR=hillshade.png + .json bbox in local metres.
 # High-pass relief only: every dune ridge, hollow, bunker bowl and mound on the course, engraved in ink; light on the greens, fuller in the rough.
 LIDAR = os.environ.get('LIDAR'); LHP = None
@@ -482,7 +536,7 @@ for px_, py_ in ([] if NOPLAY else d.get('pins', [])):
     dr.polygon([(X, Y - hpole), (X + U * .55 * SS, Y - hpole + U * .2 * SS), (X, Y - hpole + U * .4 * SS)], fill=RED)
 if os.environ.get('GEODUMP'):   # 27 Nov: course geometry in poster px, for styles drawn from the vectors (estate.py)
     _P = lambda g: [[[(T(*q)[0] / SS, T(*q)[1] / SS) for q in p_.exterior.coords]] + [[(T(*q)[0] / SS, T(*q)[1] / SS) for q in i_.coords] for i_ in p_.interiors] for p_ in polys(g)]
-    json.dump({'W': W, 'H': H, 'px_m': s, **{k: _P(g) for k, g in (('land', land), ('fair', fair), ('green', green), ('tee', tee), ('bunk', bunk), ('water', water), ('woods', woods), ('scrub', _sc))},
+    json.dump({'W': W, 'H': H, 'px_m': s, **{k: _P(g) for k, g in (('land', land), ('fair', fair), ('green', green), ('tee', tee), ('bunk', bunk), ('water', water), ('woods', woods), ('scrub', _sc), ('bld', bld), ('roofd', roof_parts(bld)[0]))}, 'ridge': [[(T(*q)[0] / SS, T(*q)[1] / SS) for q in _g.coords] for _l in roof_parts(bld)[1] for _g in (getattr(_l, 'geoms', None) or [_l]) if _g.geom_type == 'LineString'],
                'crowns': [(T(x, y)[0] / SS, T(x, y)[1] / SS, r * CK * s) for x, y, r in crowns]}, open(os.environ['GEODUMP'], 'w'))
 line(land, (44, 58, 30) if HER else INK, LW(.1 if HER else .14), T)
 # line of play + numbered tee circles (red ink, like an architect's routing)
