@@ -12,7 +12,11 @@ from shapely.prepared import prep
 HERE = os.path.dirname(os.path.abspath(__file__)); FD = HERE + '/../../fonts/'
 F = lambda n, s: ImageFont.truetype(FD + n + '.ttf', max(6, int(s)))
 d = json.load(open(sys.argv[1])); c = json.load(open(sys.argv[2])); out = sys.argv[3]
-if os.environ.get("EXTRA_CROWNS"): d["crowns"] = d.get("crowns", []) + json.load(open(os.environ["EXTRA_CROWNS"]))   # 27 Nov heritage: real canopy from satellite (canopy.py), so tree density matches the ground
+if os.environ.get("EXTRA_CROWNS"):
+    from scipy.spatial import cKDTree as _KD
+    _ex = json.load(open(os.environ["EXTRA_CROWNS"])); _cr = d.get("crowns", [])
+    if _cr: _kd = _KD([(q[0], q[1]) for q in _cr]); _ex = [q for q in _ex if _kd.query((q[0], q[1]))[0] > 3.5]   # no double trees where the trace already has one
+    d["crowns"] = _cr + _ex   # 27 Nov heritage: real canopy from satellite (canopy.py), so tree density matches the ground
 PV = bool(c.get("preview"))   # satellite preview (26 Nov): holes not routed yet, so no line of play, flags or hole strip
 PAPER = (240, 234, 219); INK = (36, 46, 38); INK2 = (110, 108, 94); RED = (150, 70, 48)
 LANDF = (232, 228, 208); FAIR = (196, 210, 160); GRN = (170, 196, 128); TREEF = (134, 150, 114); WATERF = (196, 210, 206); WATERL = (92, 124, 132); SANDF = (246, 240, 222); SANDD = (150, 130, 96); BLD = (214, 206, 188)
