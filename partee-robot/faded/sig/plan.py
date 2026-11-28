@@ -641,9 +641,24 @@ for i, (h, zone, rot, ang) in enumerate(segs):
     if not HER: dr.line([T2(*q) for q in rp.coords], fill=RED, width=LW(.05))
     dr.text((ccx * SS, (top + cellh - U * .9) * SS), str(h['ref']), font=fs, fill=INK, anchor='ms')
 # scale bar (real metres) + small north arrow, bottom right of the map area
-_bx1 = W - MG; _by = bot_ - U * .5
-for L_m in (500, 250, 200, 100):
-    if L_m * s < W * .14: break
+# 28 Nov: never over the course. Try the 4 map corners (and shorter bars) for a spot clear of the course ground and hole discs;
+# if every corner is taken, sit it on a small paper card so it never reads as a stray shape on the course.
+_Ls = [L_ for L_ in (500, 250, 200, 100, 50) if L_ * s < W * .14] or [50]
+_lim = unary_union([Polygon([(q[0] / SS, q[1] / SS) for q in (T(*c_) for c_ in p_.exterior.coords)]).buffer(0) for p_ in polys(land)]).buffer(U * 1.6)
+_gbox = lambda bx1, by, L_: box(bx1 - L_ * s - U * 1.0, by - U * 8.2, bx1 + U * 1.6, by + U * .5)
+_cands = [(W - MG, bot_ - U * .5), (MG + U * 1.0 + 1, bot_ - U * .5), (W - MG, top_ + U * 8.2), (MG + U * 1.0 + 1, top_ + U * 8.2)]
+_pick = None
+for _cx_, _cy_ in _cands:
+    for L_ in _Ls:
+        bx1 = _cx_ if _cx_ > W / 2 else _cx_ + L_ * s
+        if not _gbox(bx1, _cy_, L_).intersects(_lim): _pick = (bx1, _cy_, L_, False); break
+    if _pick: break
+if _pick is None: _pick = (W - MG, bot_ - U * .5, _Ls[-1], True)
+_bx1, _by, L_m, _card = _pick
+if _card:
+    _g = _gbox(_bx1, _by, L_m).bounds
+    dr.rounded_rectangle([_g[0] * SS, _g[1] * SS, _g[2] * SS, _g[3] * SS], radius=U * .8 * SS, fill=PAPER, outline=INK2, width=LW(.04))
+print('scale bar', 'card' if _card else 'clear', round(_bx1), round(_by), L_m)
 fsb = F('jost400', U * .95 * SS); x1_ = _bx1 * SS; x0_ = x1_ - L_m * s * SS; yb = _by * SS
 for k_ in range(4):
     xa = x0_ + (x1_ - x0_) * k_ / 4; xb = x0_ + (x1_ - x0_) * (k_ + 1) / 4
